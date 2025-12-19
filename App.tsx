@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { AppState, AnalysisRequest, AnalysisResult, RiskPoint, RiskTableRow } from './types';
 import { analyzeTool } from './services/geminiService';
-import { Shield, Search, Info, AlertTriangle, CheckCircle, ExternalLink, ArrowLeft, Zap, XCircle, AlertCircle, FileText, Globe } from 'lucide-react';
+import { Shield, Search, Info, AlertTriangle, CheckCircle, ExternalLink, ArrowLeft, Zap, XCircle, AlertCircle, FileText, Globe, Link } from 'lucide-react';
 
 const App: React.FC = () => {
   const [state, setState] = useState<AppState>(AppState.IDLE);
@@ -86,6 +86,16 @@ const App: React.FC = () => {
                   />
                 </div>
                 <div>
+                  <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2 px-1">Tool Website (Optional)</label>
+                  <input
+                    type="url"
+                    placeholder="https://example-ai.com"
+                    className="w-full px-6 py-4 rounded-2xl bg-slate-50 border-2 border-transparent focus:bg-white focus:border-indigo-500 transition-all outline-none text-lg font-medium shadow-inner"
+                    value={request.website}
+                    onChange={(e) => setRequest({ ...request, website: e.target.value })}
+                  />
+                </div>
+                <div>
                   <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2 px-1">Use Case (Optional)</label>
                   <textarea
                     rows={2}
@@ -111,7 +121,7 @@ const App: React.FC = () => {
             </div>
             <div className="space-y-2">
               <h3 className="text-3xl font-black text-slate-900 tracking-tight">Auditing Policies...</h3>
-              <p className="text-slate-500 font-medium">Checking {request.toolName} for data compromise points.</p>
+              <p className="text-slate-500 font-medium">Conducting exhaustive risk analysis for {request.toolName}...</p>
             </div>
           </div>
         )}
@@ -125,7 +135,7 @@ const App: React.FC = () => {
                   {getVerdictTheme(result.recommendation).icon}
                 </div>
                 <div className="text-center md:text-left space-y-2">
-                  <span className="text-xs font-black uppercase tracking-widest opacity-80">Final Security Verdict</span>
+                  <span className="text-xs font-black uppercase tracking-widest opacity-80">Security Audit Result</span>
                   <h2 className="text-5xl font-black leading-none tracking-tighter">{getVerdictTheme(result.recommendation).label}</h2>
                   <p className="text-xl font-medium opacity-90 max-w-2xl">{result.summary}</p>
                 </div>
@@ -139,7 +149,7 @@ const App: React.FC = () => {
                   <div className="p-3 bg-red-50 rounded-2xl border border-red-100">
                     <AlertTriangle className="w-8 h-8 text-red-500" />
                   </div>
-                  <h3 className="text-3xl font-black tracking-tight">Top Trade-offs (Priority Order)</h3>
+                  <h3 className="text-3xl font-black tracking-tight">Critical Trade-offs</h3>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {result.topRisks?.slice(0, 6).map((risk, idx) => (
@@ -160,13 +170,13 @@ const App: React.FC = () => {
                 </div>
               </div>
 
-              {/* DETAILED RISK TABLE */}
+              {/* DETAILED RISK TABLE - EXHAUSTIVE */}
               <div className="bg-white p-10 rounded-[3rem] border shadow-sm space-y-8 overflow-hidden">
                 <div className="flex items-center gap-4">
                   <div className="p-3 bg-indigo-50 rounded-2xl border border-indigo-100">
                     <FileText className="w-8 h-8 text-indigo-600" />
                   </div>
-                  <h3 className="text-3xl font-black tracking-tight">Full Risk Profile</h3>
+                  <h3 className="text-3xl font-black tracking-tight">Full Security Profile</h3>
                 </div>
                 
                 <div className="overflow-x-auto">
@@ -176,15 +186,15 @@ const App: React.FC = () => {
                         <th className="py-4 px-4 text-xs font-black text-slate-400 uppercase tracking-widest">#</th>
                         <th className="py-4 px-4 text-xs font-black text-slate-400 uppercase tracking-widest">Risk Category</th>
                         <th className="py-4 px-4 text-xs font-black text-slate-400 uppercase tracking-widest">What this means</th>
-                        <th className="py-4 px-4 text-xs font-black text-slate-400 uppercase tracking-widest text-right">Risk Level</th>
+                        <th className="py-4 px-4 text-xs font-black text-slate-400 uppercase tracking-widest text-right">Severity</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100">
                       {result.riskTable?.map((row, idx) => (
                         <tr key={idx} className="hover:bg-slate-50/50 transition-colors">
                           <td className="py-5 px-4 font-bold text-slate-400">{idx + 1}</td>
-                          <td className="py-5 px-4 font-black text-slate-900">{row.category}</td>
-                          <td className="py-5 px-4 text-sm font-medium text-slate-600 leading-relaxed">{row.description}</td>
+                          <td className="py-5 px-4 font-black text-slate-900 whitespace-nowrap">{row.category}</td>
+                          <td className="py-5 px-4 text-sm font-medium text-slate-600 leading-relaxed max-w-md">{row.description}</td>
                           <td className="py-5 px-4 text-right">
                             <SeverityBadge severity={row.severity} />
                           </td>
@@ -196,10 +206,10 @@ const App: React.FC = () => {
 
                 <div className="bg-slate-900 p-8 rounded-[2rem] flex flex-col md:flex-row items-center justify-between gap-4">
                   <p className="text-white font-bold text-lg">
-                    🛡️ Safety Tip: Use this tool only for experimental use cases. Avoid uploading sensitive files or private data.
+                    🛡️ Security Policy: Use this tool only for experimental use cases without uploading any sensitive files or private data.
                   </p>
                   <button onClick={() => setState(AppState.IDLE)} className="flex-shrink-0 bg-white/10 hover:bg-white/20 text-white px-6 py-3 rounded-xl font-bold border border-white/20 transition-all flex items-center gap-2">
-                    <ArrowLeft className="w-4 h-4" /> Reset Audit
+                    <ArrowLeft className="w-4 h-4" /> New Audit
                   </button>
                 </div>
               </div>
@@ -209,13 +219,19 @@ const App: React.FC = () => {
                 <div className="bg-white p-10 rounded-[3rem] border shadow-sm space-y-6">
                   <div className="flex items-center gap-3">
                     <Globe className="w-6 h-6 text-slate-400" />
-                    <h4 className="text-xl font-black tracking-tight">Primary Sources & References</h4>
+                    <h4 className="text-xl font-black tracking-tight">Sources & Inference References</h4>
                   </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                  <p className="text-sm text-slate-500 font-medium px-1">
+                    All data security risks and inferences above were derived from the following official policies, security whitepapers, and historical logs:
+                  </p>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     {result.sources.map((s, i) => (
-                      <a key={i} href={s.uri} target="_blank" className="p-4 bg-slate-50 rounded-2xl border border-slate-100 flex items-center justify-between hover:border-indigo-200 hover:bg-white transition-all group">
-                        <span className="text-xs font-bold text-slate-600 truncate mr-2">{s.title}</span>
-                        <ExternalLink className="w-3 h-3 text-slate-400 group-hover:text-indigo-500" />
+                      <a key={i} href={s.uri} target="_blank" className="p-5 bg-slate-50 rounded-2xl border border-slate-100 flex items-start justify-between hover:border-indigo-200 hover:bg-white transition-all group shadow-sm">
+                        <div className="flex flex-col gap-1">
+                          <span className="text-xs font-black text-slate-900 line-clamp-1">{s.title}</span>
+                          <span className="text-[10px] text-slate-400 font-bold truncate max-w-[200px]">{s.uri}</span>
+                        </div>
+                        <ExternalLink className="w-4 h-4 text-slate-300 group-hover:text-indigo-500 flex-shrink-0 ml-4" />
                       </a>
                     ))}
                   </div>
@@ -228,7 +244,7 @@ const App: React.FC = () => {
 
       <footer className="py-10 border-t bg-white">
         <div className="max-w-6xl mx-auto px-6 text-center">
-          <p className="text-xs font-black text-slate-400 uppercase tracking-[0.3em]">GuardAI | Protecting the Digital Workspace</p>
+          <p className="text-xs font-black text-slate-400 uppercase tracking-[0.3em]">GuardAI | Corporate AI Security Intelligence</p>
         </div>
       </footer>
     </div>

@@ -7,20 +7,23 @@ export const analyzeTool = async (request: AnalysisRequest): Promise<AnalysisRes
   
   const prompt = `
     Act as a Corporate Data Safety Officer. Analyze the FREE version of the AI tool: "${request.toolName}"
-    ${request.website ? `Website: ${request.website}` : ''}
-    ${request.useCase ? `Context: ${request.useCase}` : ''}
+    ${request.website ? `Official Website: ${request.website}` : ''}
+    ${request.useCase ? `Context/Use Case: ${request.useCase}` : ''}
 
     STRICT ANALYSIS REQUIREMENTS:
-    1. TOP TRADE-OFFS: Identify the top 5-6 most critical risks in prioritized order.
-    2. RISK TABLE: Create a categorized list of ALL data security risks. Categories should include things like "Model Training", "Third-Party Sharing", "Data Retention", "Privacy Control", etc.
+    1. TOP TRADE-OFFS: Identify the top 5-6 most critical risks in prioritized order. These are the immediate "deal-breakers".
+    2. FULL RISK PROFILE (Exhaustive): Create a comprehensive list of ALL potential data security and privacy risks. 
+       - Aim for 10 or more specific entries if any are present in the documentation/history.
+       - A single category (like 'Model Training' or 'Data Retention') can have multiple specific risks.
+       - Do not skip minor risks; we need a complete picture.
     3. LANGUAGE: Use extremely easy, non-technical language. Descriptions in the table must be under 20 words.
-    4. VERDICT: Restricted (Red), Conditional (Amber), or Approved (Green). If data is used for training, it must be Restricted.
+    4. VERDICT: Restricted (Red), Conditional (Amber), or Approved (Green). If user data is used for model training in the free version, it MUST be marked Restricted.
 
     Return a JSON response:
     {
       "toolName": "Name",
       "overallRiskScore": 0-100,
-      "summary": "1-sentence decision summary.",
+      "summary": "1-sentence decision summary for a manager.",
       "topRisks": [
         { "point": "Simple risk description", "sourceUrl": "Direct link if available", "priority": 1 }
       ],
@@ -44,14 +47,14 @@ export const analyzeTool = async (request: AnalysisRequest): Promise<AnalysisRes
     const resultText = response.text || "{}";
     const parsed = JSON.parse(resultText);
 
-    // Extract all grounding sources
+    // Extract all grounding sources for the final section
     const sources: any[] = [];
     const chunks = response.candidates?.[0]?.groundingMetadata?.groundingChunks;
     if (chunks) {
       chunks.forEach((chunk: any) => {
         if (chunk.web) {
           sources.push({
-            title: chunk.web.title || 'Official Document',
+            title: chunk.web.title || 'Official Security Source',
             uri: chunk.web.uri
           });
         }
