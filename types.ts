@@ -5,10 +5,16 @@ export interface AnalysisRequest {
   useCase?: string;
 }
 
-export interface RiskCategory {
-  name: string;
-  status: 'Critical' | 'Warning' | 'Secure';
+export interface RiskPoint {
+  point: string;
+  sourceUrl?: string;
+  priority: number;
+}
+
+export interface RiskTableRow {
+  category: string;
   description: string;
+  severity: 'High' | 'Medium' | 'Low';
 }
 
 export interface GroundingSource {
@@ -16,22 +22,12 @@ export interface GroundingSource {
   uri: string;
 }
 
-export interface RiskPoint {
-  point: string;
-  sourceUrl?: string;
-  priority: number;
-}
-
 export interface AnalysisResult {
   toolName: string;
-  overallRiskScore: number; // 0 (Low Risk) to 100 (High Risk)
+  overallRiskScore: number;
   summary: string;
   topRisks: RiskPoint[];
-  additionalRisks: RiskPoint[];
-  trainingPolicy: string;
-  breachHistory: string;
-  complianceStatus: string;
-  categories: RiskCategory[];
+  riskTable: RiskTableRow[];
   recommendation: 'Approved' | 'Conditional' | 'Restricted';
   sources: GroundingSource[];
 }

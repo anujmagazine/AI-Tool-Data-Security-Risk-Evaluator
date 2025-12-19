@@ -1,41 +1,32 @@
 
-import { GoogleGenAI, GenerateContentResponse, Type } from "@google/genai";
+import { GoogleGenAI, GenerateContentResponse } from "@google/genai";
 import { AnalysisRequest, AnalysisResult } from "../types";
 
 export const analyzeTool = async (request: AnalysisRequest): Promise<AnalysisResult> => {
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
   
   const prompt = `
-    Act as a Corporate Data Safety Officer. Analyze the FREE version of: "${request.toolName}"
+    Act as a Corporate Data Safety Officer. Analyze the FREE version of the AI tool: "${request.toolName}"
     ${request.website ? `Website: ${request.website}` : ''}
-    ${request.useCase ? `Use Case: ${request.useCase}` : ''}
+    ${request.useCase ? `Context: ${request.useCase}` : ''}
 
-    STRICT VERDICT RULES:
-    1. If they use user data for training by default (and it's not a trivial opt-out), it is "Restricted".
-    2. If there are human review clauses for transcripts, it is "Restricted".
-    3. If there is no SSO/Enterprise control, it is at best "Conditional".
-    4. "Approved" is only for tools with ZERO data retention or training by default.
+    STRICT ANALYSIS REQUIREMENTS:
+    1. TOP TRADE-OFFS: Identify the top 5-6 most critical risks in prioritized order.
+    2. RISK TABLE: Create a categorized list of ALL data security risks. Categories should include things like "Model Training", "Third-Party Sharing", "Data Retention", "Privacy Control", etc.
+    3. LANGUAGE: Use extremely easy, non-technical language. Descriptions in the table must be under 20 words.
+    4. VERDICT: Restricted (Red), Conditional (Amber), or Approved (Green). If data is used for training, it must be Restricted.
 
-    DATA TRADE-OFFS:
-    Identify all risks. Select the TOP 5 MOST CRITICAL and provide them in "topRisks". 
-    Any others go into "additionalRisks".
-    For EACH risk, use simple language (no jargon) and include a "sourceUrl" (from privacy policies or news) if possible.
-
-    Return JSON:
+    Return a JSON response:
     {
       "toolName": "Name",
       "overallRiskScore": 0-100,
-      "summary": "Plain language decision.",
+      "summary": "1-sentence decision summary.",
       "topRisks": [
-        { "point": "Simple explanation of what is at risk", "sourceUrl": "URL", "priority": 1 }
+        { "point": "Simple risk description", "sourceUrl": "Direct link if available", "priority": 1 }
       ],
-      "additionalRisks": [
-        { "point": "...", "sourceUrl": "...", "priority": 6 }
+      "riskTable": [
+        { "category": "Category Name", "description": "Max 20 word easy description", "severity": "High/Medium/Low" }
       ],
-      "trainingPolicy": "How data is used.",
-      "breachHistory": "Past incidents.",
-      "complianceStatus": "Security grade.",
-      "categories": [{ "name": "Privacy", "status": "Critical/Warning/Secure", "description": "..." }],
       "recommendation": "Restricted, Conditional, or Approved"
     }
   `;
@@ -53,18 +44,16 @@ export const analyzeTool = async (request: AnalysisRequest): Promise<AnalysisRes
     const resultText = response.text || "{}";
     const parsed = JSON.parse(resultText);
 
-    // Hard safety check to prevent "Green" for "Restricted" profiles
-    if ((parsed.overallRiskScore > 50 || parsed.topRisks.length > 0) && parsed.recommendation === 'Approved') {
-       parsed.recommendation = 'Restricted';
-       parsed.summary = "Risk detected: High privacy concerns make this unsuitable for corporate secrets.";
-    }
-
+    // Extract all grounding sources
     const sources: any[] = [];
     const chunks = response.candidates?.[0]?.groundingMetadata?.groundingChunks;
     if (chunks) {
       chunks.forEach((chunk: any) => {
         if (chunk.web) {
-          sources.push({ title: chunk.web.title || 'Source', uri: chunk.web.uri });
+          sources.push({
+            title: chunk.web.title || 'Official Document',
+            uri: chunk.web.uri
+          });
         }
       });
     }
@@ -72,6 +61,6 @@ export const analyzeTool = async (request: AnalysisRequest): Promise<AnalysisRes
     return { ...parsed, sources };
   } catch (error) {
     console.error("Analysis failed:", error);
-    throw new Error("Security audit failed. Please try again later.");
+    throw new Error("Security audit failed. Please check the tool name and try again.");
   }
 };
