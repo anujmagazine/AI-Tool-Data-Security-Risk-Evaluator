@@ -16,14 +16,21 @@ export interface GroundingSource {
   uri: string;
 }
 
+export interface RiskPoint {
+  point: string;
+  sourceUrl?: string;
+  priority: number;
+}
+
 export interface AnalysisResult {
   toolName: string;
   overallRiskScore: number; // 0 (Low Risk) to 100 (High Risk)
   summary: string;
-  dataCompromisePoints: string[];
+  topRisks: RiskPoint[];
+  additionalRisks: RiskPoint[];
   trainingPolicy: string;
   breachHistory: string;
-  complianceStatus: string; // e.g., SOC2, GDPR
+  complianceStatus: string;
   categories: RiskCategory[];
   recommendation: 'Approved' | 'Conditional' | 'Restricted';
   sources: GroundingSource[];
