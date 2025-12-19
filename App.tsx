@@ -4,7 +4,7 @@ import { AppState, AnalysisRequest, AnalysisResult } from './types';
 import { analyzeTool } from './services/geminiService';
 import { RiskScoreGauge } from './components/RiskScoreGauge';
 import { RiskBadge } from './components/RiskBadge';
-import { Shield, Search, Info, AlertTriangle, CheckCircle, ExternalLink, ArrowLeft, Lock, Globe, FileText, Zap } from 'lucide-react';
+import { Shield, Search, Info, AlertTriangle, CheckCircle, ExternalLink, ArrowLeft, Lock, Globe, FileText, Zap, XCircle, AlertCircle, Copy, MessageSquare } from 'lucide-react';
 
 const App: React.FC = () => {
   const [state, setState] = useState<AppState>(AppState.IDLE);
@@ -15,7 +15,6 @@ const App: React.FC = () => {
   const handleAnalyze = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!request.toolName) return;
-
     setState(AppState.LOADING);
     setError(null);
     try {
@@ -28,261 +27,208 @@ const App: React.FC = () => {
     }
   };
 
-  const reset = () => {
-    setState(AppState.IDLE);
-    setRequest({ toolName: '', website: '', useCase: '' });
-    setResult(null);
-    setError(null);
+  const getVerdictTheme = (rec: string) => {
+    switch (rec) {
+      case 'Restricted': return { bg: 'bg-red-600', text: 'text-white', icon: <XCircle className="w-12 h-12" />, label: 'STOP: DO NOT USE' };
+      case 'Conditional': return { bg: 'bg-amber-500', text: 'text-white', icon: <AlertCircle className="w-12 h-12" />, label: 'CAUTION: USE WITH LIMITS' };
+      default: return { bg: 'bg-emerald-600', text: 'text-white', icon: <CheckCircle className="w-12 h-12" />, label: 'GO: APPROVED FOR WORK' };
+    }
   };
 
   return (
-    <div className="min-h-screen flex flex-col">
-      {/* Header */}
-      <header className="bg-white border-b sticky top-0 z-10">
-        <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-2 cursor-pointer" onClick={reset}>
-            <div className="bg-indigo-600 p-1.5 rounded-lg">
+    <div className="min-h-screen flex flex-col bg-slate-50">
+      <header className="bg-white border-b sticky top-0 z-10 py-4">
+        <div className="max-w-5xl mx-auto px-6 flex items-center justify-between">
+          <div className="flex items-center gap-2 cursor-pointer" onClick={() => setState(AppState.IDLE)}>
+            <div className="bg-slate-900 p-1.5 rounded-lg">
               <Shield className="w-5 h-5 text-white" />
             </div>
-            <h1 className="text-xl font-bold text-slate-900 tracking-tight">GuardAI</h1>
+            <h1 className="text-xl font-bold text-slate-900 tracking-tight italic">GuardAI</h1>
           </div>
-          <div className="text-sm font-medium text-slate-500 hidden sm:block px-3 py-1 bg-amber-50 rounded-full border border-amber-100 flex items-center gap-1.5">
-            <Zap className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />
-            Free-Tier Policy Auditor
+          <div className="text-xs font-bold bg-slate-100 px-3 py-1 rounded-full text-slate-600 uppercase tracking-widest">
+            Manager's Toolkit
           </div>
         </div>
       </header>
 
-      <main className="flex-1 max-w-6xl mx-auto px-4 py-8 w-full">
+      <main className="flex-1 max-w-5xl mx-auto px-6 py-10 w-full">
         {state === AppState.IDLE && (
-          <div className="max-w-2xl mx-auto space-y-8 animate-in fade-in duration-500">
+          <div className="max-w-2xl mx-auto space-y-10 animate-in fade-in slide-in-from-top-4">
             <div className="text-center space-y-4">
-              <h2 className="text-4xl font-extrabold text-slate-900">Are Free AI Tools safe?</h2>
-              <p className="text-lg text-slate-600">
-                Audit the <span className="font-bold text-indigo-600 underline decoration-indigo-200">Free/Public tiers</span> of AI software. 
-                Discover hidden data-for-training clauses and security gaps before your team uses them.
+              <h2 className="text-5xl font-black text-slate-900 leading-tight">Can your team use this free tool?</h2>
+              <p className="text-xl text-slate-500 font-medium">
+                Find out what data you are accidentally giving away.
               </p>
             </div>
 
-            <form onSubmit={handleAnalyze} className="bg-white p-8 rounded-2xl shadow-sm border space-y-6">
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-1">Tool Name (Auditing Free Tier) <span className="text-red-500">*</span></label>
+            <form onSubmit={handleAnalyze} className="bg-white p-10 rounded-[2.5rem] shadow-xl shadow-slate-200/50 border border-slate-100 space-y-8">
+              <div className="space-y-6">
+                <div className="group">
+                  <label className="block text-sm font-bold text-slate-400 uppercase tracking-widest mb-2 px-1">Which tool are they using?</label>
                   <input
                     required
                     type="text"
-                    placeholder="e.g. ChatGPT (Free), Midjourney, Claude..."
-                    className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all outline-none"
+                    placeholder="e.g. ChatGPT, Claude, Gamma, Runway"
+                    className="w-full px-6 py-4 rounded-2xl bg-slate-50 border-2 border-transparent focus:bg-white focus:border-indigo-500 transition-all outline-none text-lg font-medium shadow-inner"
                     value={request.toolName}
                     onChange={(e) => setRequest({ ...request, toolName: e.target.value })}
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-1">Website (Optional)</label>
-                  <input
-                    type="url"
-                    placeholder="https://example.com"
-                    className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all outline-none"
-                    value={request.website}
-                    onChange={(e) => setRequest({ ...request, website: e.target.value })}
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-1">Specific Work Context (Optional)</label>
+                  <label className="block text-sm font-bold text-slate-400 uppercase tracking-widest mb-2 px-1">What is the use case?</label>
                   <textarea
                     rows={2}
-                    placeholder="e.g. Employee uploading source code to get help with debugging..."
-                    className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all outline-none resize-none"
+                    placeholder="e.g. Asking AI to summarize internal meeting transcripts..."
+                    className="w-full px-6 py-4 rounded-2xl bg-slate-50 border-2 border-transparent focus:bg-white focus:border-indigo-500 transition-all outline-none text-lg font-medium shadow-inner resize-none"
                     value={request.useCase}
                     onChange={(e) => setRequest({ ...request, useCase: e.target.value })}
                   />
                 </div>
               </div>
-              <div className="bg-amber-50 p-4 rounded-xl border border-amber-100 flex gap-3 items-start">
-                <Info className="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" />
-                <p className="text-xs text-amber-800 leading-relaxed">
-                  <strong>Notice:</strong> This audit specifically targets <strong>Free, Individual, and Public tiers</strong>. Risks identified here may be mitigated in paid "Enterprise" versions.
-                </p>
-              </div>
               <button
                 type="submit"
-                className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-4 rounded-xl flex items-center justify-center gap-2 shadow-lg shadow-indigo-100 transition-all group"
+                className="w-full bg-slate-900 hover:bg-black text-white font-black text-xl py-5 rounded-2xl flex items-center justify-center gap-3 transition-all hover:scale-[1.02] active:scale-[0.98] shadow-lg"
               >
-                <Search className="w-5 h-5 group-hover:scale-110 transition-transform" />
-                Analyze Free-Tier Security
+                <Zap className="w-6 h-6 fill-amber-400 text-amber-400" />
+                Run Safety Check
               </button>
+              <p className="text-center text-xs text-slate-400 font-bold uppercase tracking-widest">
+                Analyzes Privacy Policies & Cyber-Threat Logs Automatically
+              </p>
             </form>
           </div>
         )}
 
         {state === AppState.LOADING && (
-          <div className="max-w-xl mx-auto text-center py-20 space-y-6 animate-pulse">
-            <div className="relative inline-block">
-              <div className="absolute inset-0 bg-indigo-100 rounded-full animate-ping opacity-25"></div>
-              <Shield className="w-20 h-20 text-indigo-600 relative mx-auto" />
+          <div className="max-w-xl mx-auto text-center py-20 space-y-8">
+            <div className="relative">
+              <div className="w-32 h-32 bg-indigo-50 rounded-full flex items-center justify-center mx-auto animate-pulse">
+                <Search className="w-12 h-12 text-indigo-500 animate-bounce" />
+              </div>
             </div>
-            <div className="space-y-2">
-              <h3 className="text-2xl font-bold text-slate-900">Auditing Free-Tier Terms...</h3>
-              <p className="text-slate-500">Searching for data-for-training clauses and security exemptions for <strong>{request.toolName}</strong>.</p>
-            </div>
-          </div>
-        )}
-
-        {state === AppState.ERROR && (
-          <div className="max-w-xl mx-auto py-20 text-center">
-            <div className="bg-red-50 p-8 rounded-3xl space-y-4 border border-red-100">
-              <AlertTriangle className="w-16 h-16 text-red-500 mx-auto" />
-              <h3 className="text-xl font-bold text-red-900">Audit Failed</h3>
-              <p className="text-red-700">{error}</p>
-              <button onClick={() => setState(AppState.IDLE)} className="text-indigo-600 font-semibold underline">Try again</button>
+            <div className="space-y-3">
+              <h3 className="text-2xl font-black text-slate-900">Scanning Policies...</h3>
+              <p className="text-slate-500 font-medium">Checking if {request.toolName} uses your data for training.</p>
             </div>
           </div>
         )}
 
         {state === AppState.RESULT && result && (
-          <div className="space-y-8 animate-in slide-in-from-bottom-4 duration-500">
-            <div className="flex items-center justify-between">
-              <button 
-                onClick={() => setState(AppState.IDLE)}
-                className="flex items-center gap-2 text-slate-500 hover:text-indigo-600 font-medium transition-colors"
-              >
-                <ArrowLeft className="w-4 h-4" /> New Audit
-              </button>
-              <div className="flex items-center gap-2 px-3 py-1.5 bg-indigo-50 rounded-full border border-indigo-100 text-indigo-700 text-xs font-bold uppercase tracking-wider">
-                <Zap className="w-3.5 h-3.5 fill-indigo-600" />
-                Free-Tier Focused Report
+          <div className="space-y-8 animate-in zoom-in-95 duration-500">
+            {/* BIG VERDICT CARD */}
+            <div className={`rounded-[3rem] p-10 shadow-2xl overflow-hidden relative ${getVerdictTheme(result.recommendation).bg} ${getVerdictTheme(result.recommendation).text}`}>
+              <div className="absolute top-0 right-0 p-8 opacity-20 transform translate-x-4 -translate-y-4">
+                {getVerdictTheme(result.recommendation).icon}
+              </div>
+              <div className="relative z-10 flex flex-col md:flex-row items-center gap-8">
+                <div className="flex-shrink-0 bg-white/20 p-6 rounded-3xl backdrop-blur-sm">
+                  {getVerdictTheme(result.recommendation).icon}
+                </div>
+                <div className="text-center md:text-left space-y-2">
+                  <span className="text-xs font-black uppercase tracking-[0.2em] opacity-80">The Verdict for {result.toolName}</span>
+                  <h2 className="text-5xl font-black leading-none">{getVerdictTheme(result.recommendation).label}</h2>
+                  <p className="text-xl font-medium opacity-90 max-w-xl">{result.summary}</p>
+                </div>
               </div>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-              <div className="lg:col-span-2 space-y-8">
-                <div className="bg-white p-8 rounded-3xl border shadow-sm space-y-6">
-                  <div className="flex flex-wrap items-center justify-between gap-4">
-                    <div>
-                      <h2 className="text-3xl font-black text-slate-900">{result.toolName}</h2>
-                      <div className="flex items-center gap-2 mt-1">
-                        <Globe className="w-4 h-4 text-slate-400" />
-                        <span className="text-slate-500 text-sm">{request.website || 'Public Version'}</span>
-                      </div>
-                    </div>
-                    <RiskBadge status={result.recommendation} />
-                  </div>
-
-                  <div className="p-6 bg-amber-50/50 rounded-2xl border border-amber-100">
-                    <h3 className="text-sm font-bold text-amber-600 uppercase tracking-wider mb-2 flex items-center gap-2">
-                      <AlertTriangle className="w-4 h-4" /> Free Version Risk Summary
-                    </h3>
-                    <p className="text-slate-700 leading-relaxed text-lg font-medium">"{result.summary}"</p>
-                  </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                    <div className="space-y-4">
-                      <h4 className="flex items-center gap-2 font-bold text-slate-800">
-                        <Lock className="w-4 h-4 text-indigo-500" /> 
-                        Free Tier Audit Pillars
-                      </h4>
-                      {result.categories?.map((cat, idx) => (
-                        <div key={idx} className="p-4 border rounded-xl bg-white hover:bg-slate-50 transition-colors">
-                          <div className="flex items-center justify-between mb-2">
-                            <span className="font-semibold text-slate-700">{cat.name}</span>
-                            <RiskBadge status={cat.status} />
-                          </div>
-                          <p className="text-xs text-slate-500 leading-relaxed">{cat.description}</p>
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+              {/* LEFT: THE RISK (The Compromise) */}
+              <div className="lg:col-span-7 space-y-6">
+                <div className="bg-white p-8 rounded-[2.5rem] border shadow-sm space-y-6">
+                  <h3 className="text-2xl font-black text-slate-900 flex items-center gap-3">
+                    <AlertTriangle className="w-7 h-7 text-red-500" />
+                    What you give up for "Free"
+                  </h3>
+                  <div className="space-y-3">
+                    {result.dataCompromisePoints?.map((point, idx) => (
+                      <div key={idx} className="flex gap-4 p-5 bg-slate-50 rounded-2xl border border-slate-100 group hover:border-red-200 transition-colors">
+                        <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center border shadow-sm flex-shrink-0">
+                          <span className="text-red-500 font-black text-sm">{idx + 1}</span>
                         </div>
-                      ))}
-                    </div>
-
-                    <div className="space-y-4">
-                      <h4 className="flex items-center gap-2 font-bold text-slate-800">
-                        <FileText className="w-4 h-4 text-indigo-500" />
-                        Unintended Compromises
-                      </h4>
-                      <div className="space-y-2">
-                        {result.dataCompromisePoints?.map((point, idx) => (
-                          <div key={idx} className="flex gap-3 p-3 bg-red-50/50 rounded-xl border border-red-100">
-                            <div className="mt-1 flex-shrink-0">
-                              <AlertTriangle className="w-4 h-4 text-red-500" />
-                            </div>
-                            <p className="text-sm text-red-700">{point}</p>
-                          </div>
-                        ))}
+                        <p className="text-lg font-bold text-slate-700 leading-tight group-hover:text-slate-900">{point}</p>
                       </div>
-                    </div>
+                    ))}
                   </div>
                 </div>
 
-                <div className="bg-white p-8 rounded-3xl border shadow-sm">
-                  <h3 className="text-xl font-bold text-slate-900 mb-6 flex items-center gap-2">
-                    <Info className="w-5 h-5 text-indigo-600" /> Training & Security Context
+                <div className="bg-white p-8 rounded-[2.5rem] border shadow-sm">
+                  <h3 className="text-2xl font-black text-slate-900 mb-6 flex items-center gap-3">
+                    <MessageSquare className="w-7 h-7 text-indigo-600" />
+                    Manager's Team Guidance
                   </h3>
-                  <div className="space-y-6">
-                    <div>
-                      <h4 className="font-bold text-slate-800 mb-2">How they use your data (Free Version)</h4>
-                      <p className="text-slate-600 bg-indigo-50/30 p-4 rounded-xl border border-indigo-100/50 leading-relaxed">{result.trainingPolicy}</p>
-                    </div>
-                    <div>
-                      <h4 className="font-bold text-slate-800 mb-2">Historical Security Incidents</h4>
-                      <p className="text-slate-600 bg-slate-50 p-4 rounded-xl border border-slate-100 leading-relaxed">{result.breachHistory}</p>
-                    </div>
+                  <div className="p-6 bg-indigo-50 rounded-2xl border border-indigo-100 relative group">
+                    <button className="absolute top-4 right-4 p-2 bg-white rounded-lg shadow-sm hover:bg-slate-50 transition-colors border" title="Copy to clipboard">
+                      <Copy className="w-4 h-4 text-slate-400" />
+                    </button>
+                    <p className="text-indigo-900 font-medium italic leading-relaxed">
+                      "Team, we checked <strong>{result.toolName}</strong>'s free tier policy. {result.trainingPolicy} {result.recommendation === 'Restricted' ? 'Please avoid using this tool for any work-related tasks immediately.' : 'You can use it only for non-sensitive public work.'}"
+                    </p>
                   </div>
                 </div>
               </div>
 
-              <div className="space-y-8">
-                <div className="bg-white p-8 rounded-3xl border shadow-sm text-center">
+              {/* RIGHT: THE SCORECARD */}
+              <div className="lg:col-span-5 space-y-6">
+                <div className="bg-white p-8 rounded-[2.5rem] border shadow-sm text-center space-y-4">
+                  <h4 className="text-sm font-black text-slate-400 uppercase tracking-widest">Risk Scorecard</h4>
                   <RiskScoreGauge score={result.overallRiskScore} />
-                  <div className="mt-4 p-4 rounded-2xl bg-slate-50">
-                    <h4 className="text-sm font-bold text-slate-400 uppercase tracking-widest mb-1">Corporate Verdict</h4>
-                    <p className="text-lg font-black text-slate-900">{result.recommendation}</p>
-                  </div>
-                </div>
-
-                <div className="bg-white p-6 rounded-3xl border shadow-sm">
-                  <h4 className="font-bold text-slate-900 mb-4 flex items-center gap-2">
-                    <CheckCircle className="w-4 h-4 text-emerald-500" /> Free-Tier Compliance
-                  </h4>
-                  <div className="flex flex-wrap gap-2">
-                    {result.complianceStatus ? result.complianceStatus.split(',').map((status, idx) => (
-                      <span key={idx} className="px-3 py-1 bg-emerald-50 text-emerald-700 rounded-lg text-sm font-bold border border-emerald-100 uppercase">
-                        {status.trim()}
-                      </span>
-                    )) : <span className="text-slate-400 text-sm italic">No verified certifications for free tier</span>}
-                  </div>
-                </div>
-
-                {result.sources?.length > 0 && (
-                  <div className="bg-white p-6 rounded-3xl border shadow-sm">
-                    <h4 className="font-bold text-slate-900 mb-4">Verification Sources</h4>
-                    <div className="space-y-3">
-                      {result.sources.map((source, idx) => (
-                        <a
-                          key={idx}
-                          href={source.uri}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="flex items-start gap-2 p-2 rounded-xl hover:bg-slate-50 transition-colors group"
-                        >
-                          <ExternalLink className="w-4 h-4 text-indigo-500 mt-1 flex-shrink-0" />
-                          <span className="text-xs text-slate-600 group-hover:text-indigo-600 line-clamp-2">{source.title}</span>
-                        </a>
-                      ))}
+                  <div className="grid grid-cols-2 gap-4 pt-4">
+                    <div className="p-4 bg-slate-50 rounded-2xl border">
+                      <p className="text-[10px] font-black text-slate-400 uppercase">Security</p>
+                      <p className="text-lg font-black text-slate-900">{result.overallRiskScore > 70 ? 'Low' : result.overallRiskScore > 40 ? 'Mid' : 'High'}</p>
+                    </div>
+                    <div className="p-4 bg-slate-50 rounded-2xl border">
+                      <p className="text-[10px] font-black text-slate-400 uppercase">Privacy</p>
+                      <p className="text-lg font-black text-slate-900">{result.categories?.[0]?.status || 'Warning'}</p>
                     </div>
                   </div>
-                )}
+                </div>
+
+                <div className="bg-white p-8 rounded-[2.5rem] border shadow-sm space-y-4">
+                  <h4 className="text-sm font-black text-slate-900 uppercase tracking-widest flex items-center gap-2">
+                    <Info className="w-4 h-4" /> Fact Check
+                  </h4>
+                  <div className="space-y-4 text-sm font-medium text-slate-500">
+                    <div className="pb-4 border-b">
+                      <p className="text-slate-900 font-bold mb-1">Breach History</p>
+                      <p>{result.breachHistory}</p>
+                    </div>
+                    <div className="pb-4 border-b">
+                      <p className="text-slate-900 font-bold mb-1">Safety Standard</p>
+                      <p>{result.complianceStatus}</p>
+                    </div>
+                  </div>
+                  {result.sources?.length > 0 && (
+                    <div className="space-y-2 pt-2">
+                      <p className="text-[10px] font-black text-slate-400 uppercase">Data Sources</p>
+                      <div className="flex flex-wrap gap-2">
+                        {result.sources.slice(0, 3).map((s, i) => (
+                          <a key={i} href={s.uri} target="_blank" className="text-[10px] font-bold text-indigo-600 bg-indigo-50 px-2 py-1 rounded-md border border-indigo-100 flex items-center gap-1">
+                            {s.title.substring(0, 15)}... <ExternalLink className="w-2 h-2" />
+                          </a>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                <button 
+                  onClick={() => setState(AppState.IDLE)}
+                  className="w-full py-4 rounded-2xl border-2 border-slate-200 text-slate-500 font-bold hover:bg-slate-100 transition-colors flex items-center justify-center gap-2"
+                >
+                  <ArrowLeft className="w-4 h-4" /> Check Another Tool
+                </button>
               </div>
             </div>
           </div>
         )}
       </main>
 
-      <footer className="bg-white border-t py-8 mt-auto">
-        <div className="max-w-6xl mx-auto px-4 flex flex-col md:flex-row justify-between items-center gap-4 text-slate-400 text-sm">
-          <p>© 2024 GuardAI Security Systems. Focus: Free-Tier Audit.</p>
-          <div className="flex gap-6">
-            <a href="https://ai.google.dev/gemini-api/docs/billing" target="_blank" className="hover:text-indigo-600 transition-colors">Billing Policy Info</a>
-            <a href="#" className="hover:text-indigo-600 transition-colors">Corporate Safety</a>
-          </div>
-        </div>
+      <footer className="py-10 text-center">
+        <p className="text-slate-400 text-xs font-bold uppercase tracking-widest">
+          Build for Managers. Designed for Safety.
+        </p>
       </footer>
     </div>
   );

@@ -1,40 +1,41 @@
 
-import { GoogleGenAI, Type, GenerateContentResponse } from "@google/genai";
+import { GoogleGenAI, GenerateContentResponse } from "@google/genai";
 import { AnalysisRequest, AnalysisResult } from "../types";
 
 export const analyzeTool = async (request: AnalysisRequest): Promise<AnalysisResult> => {
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
   
   const prompt = `
-    Act as a World-Class Cybersecurity and Data Privacy Auditor specializing in SaaS risk.
-    Analyze the FREE VERSION of the AI tool: "${request.toolName}" 
+    Act as a corporate data safety officer. 
+    Analyze the FREE version of the AI tool: "${request.toolName}"
     ${request.website ? `Website: ${request.website}` : ''}
-    ${request.useCase ? `Context/Use Case: ${request.useCase}` : ''}
+    ${request.useCase ? `Context: ${request.useCase}` : ''}
 
-    CRITICAL INSTRUCTION: Analyze ONLY the FREE/COMMUNITY tier. Ignore features or privacy guarantees that only apply to paid "Enterprise" or "Pro" plans.
-    
-    Specifically research for the FREE VERSION:
-    1. Data Usage for Training: Does the free tier policy state that user inputs are used to train their models? Is "Opt-Out" available for free users?
-    2. Privacy Policy: Does the free version have lower data protection standards than the enterprise version?
-    3. Security Features: Does the free tier lack key enterprise features like SSO, SCIM, or data encryption at rest (standard in paid versions)?
-    4. Historical Data Breaches: Any leaks specifically involving public/free user data.
-    5. Compliance: Are compliance certifications (SOC2, HIPAA) restricted only to their paid tiers?
+    Your goal is to help a manager decide if their team should use this free tool.
+    Avoid jargon. Use "Plain English".
 
-    Return a JSON response following this structure:
+    Specifically look for the "Price of Free":
+    1. Does the tool "own" the inputs or use them to train their public model?
+    2. Does it lack basic company security (like private login/SSO)?
+    3. Are there known leaks of user data?
+
+    Return a JSON response:
     {
-      "toolName": "Name of the tool (Free Version)",
-      "overallRiskScore": number (0-100, where 100 is most dangerous),
-      "summary": "Focus specifically on why the FREE version is or isn't a risk for the organization.",
-      "dataCompromisePoints": ["point 1 specifically about free-tier data storage/usage", "point 2..."],
-      "trainingPolicy": "Details about how FREE user data is used for model improvement.",
-      "breachHistory": "Incidents affecting the public/free user base.",
-      "complianceStatus": "List what is actually applicable to the FREE tier.",
-      "categories": [
-        { "name": "Free-Tier Privacy", "status": "Critical/Warning/Secure", "description": "reasoning" },
-        { "name": "Standard Security", "status": "Critical/Warning/Secure", "description": "reasoning" },
-        { "name": "Data Ownership", "status": "Critical/Warning/Secure", "description": "reasoning" }
+      "toolName": "Name",
+      "overallRiskScore": 0-100,
+      "summary": "A 1-sentence decision like 'Do not use this for company secrets.'",
+      "dataCompromisePoints": [
+        "Example: They can read your private messages to train their AI.",
+        "Example: Your uploaded files are stored on public servers."
       ],
-      "recommendation": "Approved/Conditional/Restricted"
+      "trainingPolicy": "Simple explanation of how they use your data for their own benefit.",
+      "breachHistory": "Short mention of any past security scares.",
+      "complianceStatus": "Simple: 'Meets basic standards' or 'Fails company security'",
+      "categories": [
+        { "name": "Data Privacy", "status": "Critical/Warning/Secure", "description": "What happens to your secrets?" },
+        { "name": "Legal Safety", "status": "Critical/Warning/Secure", "description": "Who owns what you create?" }
+      ],
+      "recommendation": "Restricted (Stop), Conditional (Caution), or Approved (Go)"
     }
   `;
 
@@ -51,26 +52,22 @@ export const analyzeTool = async (request: AnalysisRequest): Promise<AnalysisRes
     const resultText = response.text || "{}";
     const parsed = JSON.parse(resultText);
 
-    // Extract grounding sources
     const sources: any[] = [];
     const chunks = response.candidates?.[0]?.groundingMetadata?.groundingChunks;
     if (chunks) {
       chunks.forEach((chunk: any) => {
         if (chunk.web) {
           sources.push({
-            title: chunk.web.title || 'Source',
+            title: chunk.web.title || 'Official Source',
             uri: chunk.web.uri
           });
         }
       });
     }
 
-    return {
-      ...parsed,
-      sources: sources
-    };
+    return { ...parsed, sources };
   } catch (error) {
     console.error("Analysis failed:", error);
-    throw new Error("Failed to analyze tool. Please try again later.");
+    throw new Error("Couldn't reach the security server. Please check the name and try again.");
   }
 };
