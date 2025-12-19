@@ -6,34 +6,31 @@ export const analyzeTool = async (request: AnalysisRequest): Promise<AnalysisRes
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
   
   const prompt = `
-    Act as a corporate data safety officer. 
+    Act as a strict Corporate Data Protection Officer (CISO). 
     Analyze the FREE version of the AI tool: "${request.toolName}"
     ${request.website ? `Website: ${request.website}` : ''}
     ${request.useCase ? `Context: ${request.useCase}` : ''}
 
-    Your goal is to help a manager decide if their team should use this free tool.
-    Avoid jargon. Use "Plain English".
+    CRITICAL SAFETY RULE: 
+    - If the tool uses user data for training by default, it MUST be "Restricted" (Stop).
+    - If the tool is useful but lacks encryption or has human-review clauses, it MUST be "Conditional" (Caution).
+    - ONLY mark as "Approved" (Go) if the free tier has explicit "Zero-Data-Retainment" policies (very rare).
 
-    Specifically look for the "Price of Free":
-    1. Does the tool "own" the inputs or use them to train their public model?
-    2. Does it lack basic company security (like private login/SSO)?
-    3. Are there known leaks of user data?
+    NEVER mark a tool as "Approved" if you then warn people not to put secrets in it. If they can't put secrets in it, it is NOT "Approved for work".
 
     Return a JSON response:
     {
       "toolName": "Name",
       "overallRiskScore": 0-100,
-      "summary": "A 1-sentence decision like 'Do not use this for company secrets.'",
+      "summary": "Clear guidance: 'Unsafe for work' or 'Public data only'.",
       "dataCompromisePoints": [
-        "Example: They can read your private messages to train their AI.",
-        "Example: Your uploaded files are stored on public servers."
+        "Specifically mention data-for-training or human review."
       ],
-      "trainingPolicy": "Simple explanation of how they use your data for their own benefit.",
-      "breachHistory": "Short mention of any past security scares.",
-      "complianceStatus": "Simple: 'Meets basic standards' or 'Fails company security'",
+      "trainingPolicy": "Simple explanation of data ownership.",
+      "breachHistory": "Past security issues.",
+      "complianceStatus": "Corporate security grade.",
       "categories": [
-        { "name": "Data Privacy", "status": "Critical/Warning/Secure", "description": "What happens to your secrets?" },
-        { "name": "Legal Safety", "status": "Critical/Warning/Secure", "description": "Who owns what you create?" }
+        { "name": "Privacy", "status": "Critical/Warning/Secure", "description": "Why this status?" }
       ],
       "recommendation": "Restricted (Stop), Conditional (Caution), or Approved (Go)"
     }
@@ -52,13 +49,18 @@ export const analyzeTool = async (request: AnalysisRequest): Promise<AnalysisRes
     const resultText = response.text || "{}";
     const parsed = JSON.parse(resultText);
 
+    // Safety override: if the risk score is high but recommendation is Approved, downgrade it.
+    if (parsed.overallRiskScore > 60 && parsed.recommendation === 'Approved') {
+      parsed.recommendation = 'Restricted';
+    }
+
     const sources: any[] = [];
     const chunks = response.candidates?.[0]?.groundingMetadata?.groundingChunks;
     if (chunks) {
       chunks.forEach((chunk: any) => {
         if (chunk.web) {
           sources.push({
-            title: chunk.web.title || 'Official Source',
+            title: chunk.web.title || 'Source',
             uri: chunk.web.uri
           });
         }
@@ -68,6 +70,6 @@ export const analyzeTool = async (request: AnalysisRequest): Promise<AnalysisRes
     return { ...parsed, sources };
   } catch (error) {
     console.error("Analysis failed:", error);
-    throw new Error("Couldn't reach the security server. Please check the name and try again.");
+    throw new Error("Security audit server failed. Please try again.");
   }
 };

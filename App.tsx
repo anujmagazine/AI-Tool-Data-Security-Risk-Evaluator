@@ -28,11 +28,16 @@ const App: React.FC = () => {
   };
 
   const getVerdictTheme = (rec: string) => {
-    switch (rec) {
-      case 'Restricted': return { bg: 'bg-red-600', text: 'text-white', icon: <XCircle className="w-12 h-12" />, label: 'STOP: DO NOT USE' };
-      case 'Conditional': return { bg: 'bg-amber-500', text: 'text-white', icon: <AlertCircle className="w-12 h-12" />, label: 'CAUTION: USE WITH LIMITS' };
-      default: return { bg: 'bg-emerald-600', text: 'text-white', icon: <CheckCircle className="w-12 h-12" />, label: 'GO: APPROVED FOR WORK' };
+    // Basic normalization in case AI adds "(Stop)" or similar text
+    const cleanRec = rec.split(' ')[0].toLowerCase();
+    
+    if (cleanRec.includes('restricted') || cleanRec.includes('stop')) {
+      return { bg: 'bg-red-600', text: 'text-white', icon: <XCircle className="w-12 h-12" />, label: 'STOP: DO NOT USE' };
     }
+    if (cleanRec.includes('conditional') || cleanRec.includes('caution')) {
+      return { bg: 'bg-amber-500', text: 'text-white', icon: <AlertCircle className="w-12 h-12" />, label: 'CAUTION: USE WITH LIMITS' };
+    }
+    return { bg: 'bg-emerald-600', text: 'text-white', icon: <CheckCircle className="w-12 h-12" />, label: 'GO: APPROVED FOR WORK' };
   };
 
   return (
@@ -92,9 +97,6 @@ const App: React.FC = () => {
                 <Zap className="w-6 h-6 fill-amber-400 text-amber-400" />
                 Run Safety Check
               </button>
-              <p className="text-center text-xs text-slate-400 font-bold uppercase tracking-widest">
-                Analyzes Privacy Policies & Cyber-Threat Logs Automatically
-              </p>
             </form>
           </div>
         )}
@@ -107,8 +109,8 @@ const App: React.FC = () => {
               </div>
             </div>
             <div className="space-y-3">
-              <h3 className="text-2xl font-black text-slate-900">Scanning Policies...</h3>
-              <p className="text-slate-500 font-medium">Checking if {request.toolName} uses your data for training.</p>
+              <h3 className="text-2xl font-black text-slate-900">Conducting Security Audit...</h3>
+              <p className="text-slate-500 font-medium">Determining if {request.toolName} is safe for corporate data.</p>
             </div>
           </div>
         )}
@@ -125,7 +127,7 @@ const App: React.FC = () => {
                   {getVerdictTheme(result.recommendation).icon}
                 </div>
                 <div className="text-center md:text-left space-y-2">
-                  <span className="text-xs font-black uppercase tracking-[0.2em] opacity-80">The Verdict for {result.toolName}</span>
+                  <span className="text-xs font-black uppercase tracking-[0.2em] opacity-80">Final Security Decision</span>
                   <h2 className="text-5xl font-black leading-none">{getVerdictTheme(result.recommendation).label}</h2>
                   <p className="text-xl font-medium opacity-90 max-w-xl">{result.summary}</p>
                 </div>
@@ -133,12 +135,11 @@ const App: React.FC = () => {
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-              {/* LEFT: THE RISK (The Compromise) */}
               <div className="lg:col-span-7 space-y-6">
                 <div className="bg-white p-8 rounded-[2.5rem] border shadow-sm space-y-6">
                   <h3 className="text-2xl font-black text-slate-900 flex items-center gap-3">
                     <AlertTriangle className="w-7 h-7 text-red-500" />
-                    What you give up for "Free"
+                    The Data Trade-off
                   </h3>
                   <div className="space-y-3">
                     {result.dataCompromisePoints?.map((point, idx) => (
@@ -155,69 +156,58 @@ const App: React.FC = () => {
                 <div className="bg-white p-8 rounded-[2.5rem] border shadow-sm">
                   <h3 className="text-2xl font-black text-slate-900 mb-6 flex items-center gap-3">
                     <MessageSquare className="w-7 h-7 text-indigo-600" />
-                    Manager's Team Guidance
+                    Guidance for your Team
                   </h3>
                   <div className="p-6 bg-indigo-50 rounded-2xl border border-indigo-100 relative group">
-                    <button className="absolute top-4 right-4 p-2 bg-white rounded-lg shadow-sm hover:bg-slate-50 transition-colors border" title="Copy to clipboard">
+                    <button className="absolute top-4 right-4 p-2 bg-white rounded-lg shadow-sm hover:bg-slate-50 transition-colors border" title="Copy text">
                       <Copy className="w-4 h-4 text-slate-400" />
                     </button>
                     <p className="text-indigo-900 font-medium italic leading-relaxed">
-                      "Team, we checked <strong>{result.toolName}</strong>'s free tier policy. {result.trainingPolicy} {result.recommendation === 'Restricted' ? 'Please avoid using this tool for any work-related tasks immediately.' : 'You can use it only for non-sensitive public work.'}"
+                      "Team, we audited <strong>{result.toolName}</strong>'s free tier. <strong>{result.summary}</strong> Because {result.trainingPolicy.toLowerCase()} this tool is {result.recommendation.toLowerCase().includes('restricted') ? 'strictly forbidden for any work involving company data.' : 'only to be used for non-sensitive public data.'}"
                     </p>
                   </div>
                 </div>
               </div>
 
-              {/* RIGHT: THE SCORECARD */}
               <div className="lg:col-span-5 space-y-6">
                 <div className="bg-white p-8 rounded-[2.5rem] border shadow-sm text-center space-y-4">
-                  <h4 className="text-sm font-black text-slate-400 uppercase tracking-widest">Risk Scorecard</h4>
+                  <h4 className="text-sm font-black text-slate-400 uppercase tracking-widest">Audit Scorecard</h4>
                   <RiskScoreGauge score={result.overallRiskScore} />
                   <div className="grid grid-cols-2 gap-4 pt-4">
                     <div className="p-4 bg-slate-50 rounded-2xl border">
-                      <p className="text-[10px] font-black text-slate-400 uppercase">Security</p>
-                      <p className="text-lg font-black text-slate-900">{result.overallRiskScore > 70 ? 'Low' : result.overallRiskScore > 40 ? 'Mid' : 'High'}</p>
+                      <p className="text-[10px] font-black text-slate-400 uppercase">Risk Level</p>
+                      <p className={`text-lg font-black ${result.overallRiskScore > 70 ? 'text-red-600' : result.overallRiskScore > 40 ? 'text-amber-600' : 'text-emerald-600'}`}>
+                        {result.overallRiskScore > 70 ? 'Critical' : result.overallRiskScore > 40 ? 'Elevated' : 'Minimal'}
+                      </p>
                     </div>
                     <div className="p-4 bg-slate-50 rounded-2xl border">
-                      <p className="text-[10px] font-black text-slate-400 uppercase">Privacy</p>
-                      <p className="text-lg font-black text-slate-900">{result.categories?.[0]?.status || 'Warning'}</p>
+                      <p className="text-[10px] font-black text-slate-400 uppercase">Data Control</p>
+                      <p className="text-lg font-black text-slate-900">{result.categories?.[0]?.status === 'Secure' ? 'High' : 'Low'}</p>
                     </div>
                   </div>
                 </div>
 
                 <div className="bg-white p-8 rounded-[2.5rem] border shadow-sm space-y-4">
                   <h4 className="text-sm font-black text-slate-900 uppercase tracking-widest flex items-center gap-2">
-                    <Info className="w-4 h-4" /> Fact Check
+                    <Info className="w-4 h-4" /> Audit Evidence
                   </h4>
                   <div className="space-y-4 text-sm font-medium text-slate-500">
                     <div className="pb-4 border-b">
-                      <p className="text-slate-900 font-bold mb-1">Breach History</p>
-                      <p>{result.breachHistory}</p>
-                    </div>
-                    <div className="pb-4 border-b">
-                      <p className="text-slate-900 font-bold mb-1">Safety Standard</p>
+                      <p className="text-slate-900 font-bold mb-1">Security Standard</p>
                       <p>{result.complianceStatus}</p>
                     </div>
-                  </div>
-                  {result.sources?.length > 0 && (
-                    <div className="space-y-2 pt-2">
-                      <p className="text-[10px] font-black text-slate-400 uppercase">Data Sources</p>
-                      <div className="flex flex-wrap gap-2">
-                        {result.sources.slice(0, 3).map((s, i) => (
-                          <a key={i} href={s.uri} target="_blank" className="text-[10px] font-bold text-indigo-600 bg-indigo-50 px-2 py-1 rounded-md border border-indigo-100 flex items-center gap-1">
-                            {s.title.substring(0, 15)}... <ExternalLink className="w-2 h-2" />
-                          </a>
-                        ))}
-                      </div>
+                    <div className="pb-4 border-b">
+                      <p className="text-slate-900 font-bold mb-1">Leak History</p>
+                      <p>{result.breachHistory}</p>
                     </div>
-                  )}
+                  </div>
                 </div>
 
                 <button 
                   onClick={() => setState(AppState.IDLE)}
                   className="w-full py-4 rounded-2xl border-2 border-slate-200 text-slate-500 font-bold hover:bg-slate-100 transition-colors flex items-center justify-center gap-2"
                 >
-                  <ArrowLeft className="w-4 h-4" /> Check Another Tool
+                  <ArrowLeft className="w-4 h-4" /> Start New Audit
                 </button>
               </div>
             </div>
@@ -227,7 +217,7 @@ const App: React.FC = () => {
 
       <footer className="py-10 text-center">
         <p className="text-slate-400 text-xs font-bold uppercase tracking-widest">
-          Build for Managers. Designed for Safety.
+          AI Compliance & Safety Auditor
         </p>
       </footer>
     </div>
