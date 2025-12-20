@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { AppState, AnalysisRequest, AnalysisResult, RiskPoint, RiskTableRow } from './types';
 import { analyzeTool } from './services/geminiService';
-import { Shield, Search, Info, AlertTriangle, CheckCircle, ExternalLink, ArrowLeft, Zap, XCircle, AlertCircle, FileText, Globe, Link } from 'lucide-react';
+import { Shield, Search, Info, AlertTriangle, CheckCircle, ExternalLink, ArrowLeft, Zap, XCircle, AlertCircle, FileText, Globe, Link as LinkIcon, Cpu } from 'lucide-react';
 
 const App: React.FC = () => {
   const [state, setState] = useState<AppState>(AppState.IDLE);
@@ -128,6 +128,24 @@ const App: React.FC = () => {
 
         {state === AppState.RESULT && result && (
           <div className="space-y-10 animate-in zoom-in-95 duration-500">
+            {/* TOOL HEADER */}
+            <div className="flex flex-col md:flex-row items-center justify-between gap-6 px-4">
+               <div className="flex items-center gap-4">
+                  <div className="p-4 bg-white rounded-3xl border shadow-sm">
+                     <Cpu className="w-8 h-8 text-indigo-600" />
+                  </div>
+                  <div>
+                    <h2 className="text-4xl font-black text-slate-900 tracking-tighter">
+                      Analysis for <span className="text-indigo-600">{result.toolName}</span>
+                    </h2>
+                    <p className="text-slate-500 font-bold uppercase text-xs tracking-widest mt-1">Audit conducted in real-time</p>
+                  </div>
+               </div>
+               <button onClick={() => setState(AppState.IDLE)} className="flex items-center gap-2 text-sm font-black text-slate-400 hover:text-slate-900 transition-colors">
+                 <ArrowLeft className="w-4 h-4" /> Start New Audit
+               </button>
+            </div>
+
             {/* BIG VERDICT CARD */}
             <div className={`rounded-[3rem] p-10 shadow-xl relative ${getVerdictTheme(result.recommendation).bg} ${getVerdictTheme(result.recommendation).text}`}>
               <div className="relative z-10 flex flex-col md:flex-row items-center gap-8">
@@ -206,7 +224,7 @@ const App: React.FC = () => {
 
                 <div className="bg-slate-900 p-8 rounded-[2rem] flex flex-col md:flex-row items-center justify-between gap-4">
                   <p className="text-white font-bold text-lg">
-                    🛡️ Security Policy: Use this tool only for experimental use cases without uploading any sensitive files or private data.
+                    🛡️ Security Policy: Use {result.toolName} only for experimental use cases without uploading any sensitive files or private data.
                   </p>
                   <button onClick={() => setState(AppState.IDLE)} className="flex-shrink-0 bg-white/10 hover:bg-white/20 text-white px-6 py-3 rounded-xl font-bold border border-white/20 transition-all flex items-center gap-2">
                     <ArrowLeft className="w-4 h-4" /> New Audit
@@ -215,29 +233,44 @@ const App: React.FC = () => {
               </div>
 
               {/* SOURCES SECTION */}
-              {result.sources?.length > 0 && (
-                <div className="bg-white p-10 rounded-[3rem] border shadow-sm space-y-6">
-                  <div className="flex items-center gap-3">
-                    <Globe className="w-6 h-6 text-slate-400" />
-                    <h4 className="text-xl font-black tracking-tight">Sources & Inference References</h4>
-                  </div>
-                  <p className="text-sm text-slate-500 font-medium px-1">
-                    All data security risks and inferences above were derived from the following official policies, security whitepapers, and historical logs:
-                  </p>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {result.sources.map((s, i) => (
-                      <a key={i} href={s.uri} target="_blank" className="p-5 bg-slate-50 rounded-2xl border border-slate-100 flex items-start justify-between hover:border-indigo-200 hover:bg-white transition-all group shadow-sm">
-                        <div className="flex flex-col gap-1">
-                          <span className="text-xs font-black text-slate-900 line-clamp-1">{s.title}</span>
-                          <span className="text-[10px] text-slate-400 font-bold truncate max-w-[200px]">{s.uri}</span>
+              <div id="sources" className="bg-white p-10 rounded-[3rem] border shadow-sm space-y-6">
+                <div className="flex items-center gap-3">
+                  <Globe className="w-6 h-6 text-slate-400" />
+                  <h4 className="text-xl font-black tracking-tight">Sources & Reference Documents</h4>
+                </div>
+                <p className="text-sm text-slate-500 font-medium px-1">
+                  The security assessment for <strong>{result.toolName}</strong> above was generated by analyzing the following official policies, technical documentation, and grounding sources:
+                </p>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {result.sources && result.sources.length > 0 ? (
+                    result.sources.map((s, i) => (
+                      <a key={i} href={s.uri} target="_blank" rel="noopener noreferrer" className="p-5 bg-slate-50 rounded-2xl border border-slate-100 flex items-start justify-between hover:border-indigo-200 hover:bg-white transition-all group shadow-sm">
+                        <div className="flex flex-col gap-1 overflow-hidden">
+                          <span className="text-xs font-black text-slate-900 line-clamp-2 leading-tight">{s.title}</span>
+                          <span className="text-[10px] text-slate-400 font-bold truncate mt-1">{s.uri}</span>
                         </div>
                         <ExternalLink className="w-4 h-4 text-slate-300 group-hover:text-indigo-500 flex-shrink-0 ml-4" />
                       </a>
-                    ))}
-                  </div>
+                    ))
+                  ) : (
+                    <div className="col-span-full p-8 bg-slate-50 rounded-2xl border border-dashed border-slate-200 text-center">
+                      <p className="text-slate-400 font-bold">Official {result.toolName} Privacy Policy & Terms of Service</p>
+                    </div>
+                  )}
                 </div>
-              )}
+              </div>
             </div>
+          </div>
+        )}
+
+        {state === AppState.ERROR && error && (
+          <div className="max-w-xl mx-auto py-20 text-center space-y-6">
+             <div className="p-6 bg-red-50 text-red-600 rounded-3xl border border-red-100 font-bold">
+               {error}
+             </div>
+             <button onClick={() => setState(AppState.IDLE)} className="bg-slate-900 text-white px-8 py-4 rounded-2xl font-black">
+               Return to Home
+             </button>
           </div>
         )}
       </main>
