@@ -11,17 +11,19 @@ export const analyzeTool = async (request: AnalysisRequest): Promise<AnalysisRes
     ${request.useCase ? `Context/Use Case: ${request.useCase}` : ''}
 
     STRICT ANALYSIS REQUIREMENTS:
-    1. TOP TRADE-OFFS: Identify the top 5-6 most critical risks in prioritized order. These are the immediate "deal-breakers".
-    2. FULL RISK PROFILE (Exhaustive): Create a comprehensive list of ALL potential data security and privacy risks. 
+    1. TOOL DESCRIPTION: Provide a very brief (1-sentence) description of what this tool actually does in simple, non-technical language (e.g., "A tool for generating marketing images from text").
+    2. TOP TRADE-OFFS: Identify the top 5-6 most critical risks in prioritized order. These are the immediate "deal-breakers".
+    3. FULL RISK PROFILE (Exhaustive): Create a comprehensive list of ALL potential data security and privacy risks. 
        - Aim for 10 or more specific entries if any are present in the documentation/history.
        - A single category (like 'Model Training' or 'Data Retention') can have multiple specific risks.
        - Do not skip minor risks; we need a complete picture.
-    3. LANGUAGE: Use extremely easy, non-technical language. Descriptions in the table must be under 20 words.
-    4. VERDICT: Restricted (Red), Conditional (Amber), or Approved (Green). If user data is used for model training in the free version, it MUST be marked Restricted.
+    4. LANGUAGE: Use extremely easy, non-technical language. Descriptions in the table must be under 20 words.
+    5. VERDICT: Restricted (Red), Conditional (Amber), or Approved (Green). If user data is used for model training in the free version, it MUST be marked Restricted.
 
     Return a JSON response:
     {
       "toolName": "Name",
+      "toolDescription": "1-sentence simple explanation of the tool.",
       "overallRiskScore": 0-100,
       "summary": "1-sentence decision summary for a manager.",
       "topRisks": [

@@ -138,7 +138,11 @@ const App: React.FC = () => {
                     <h2 className="text-4xl font-black text-slate-900 tracking-tighter">
                       Analysis for <span className="text-indigo-600">{result.toolName}</span>
                     </h2>
-                    <p className="text-slate-500 font-bold uppercase text-xs tracking-widest mt-1">Audit conducted in real-time</p>
+                    {/* TOOL DESCRIPTION */}
+                    <p className="text-slate-600 font-medium text-lg leading-tight mt-1 max-w-2xl">
+                      {result.toolDescription}
+                    </p>
+                    <p className="text-slate-400 font-bold uppercase text-[10px] tracking-widest mt-2">Audit conducted in real-time</p>
                   </div>
                </div>
                <button onClick={() => setState(AppState.IDLE)} className="flex items-center gap-2 text-sm font-black text-slate-400 hover:text-slate-900 transition-colors">
@@ -178,7 +182,7 @@ const App: React.FC = () => {
                       <div className="flex-1 space-y-2">
                         <p className="text-lg font-bold text-slate-700 leading-snug group-hover:text-slate-900">{risk.point}</p>
                         {risk.sourceUrl && (
-                          <a href={risk.sourceUrl} target="_blank" className="inline-flex items-center gap-1.5 text-[10px] font-black text-indigo-600 hover:text-indigo-800 uppercase tracking-widest">
+                          <a href={risk.sourceUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 text-[10px] font-black text-indigo-600 hover:text-indigo-800 uppercase tracking-widest">
                             <ExternalLink className="w-3 h-3" /> View Source
                           </a>
                         )}
@@ -223,7 +227,7 @@ const App: React.FC = () => {
                 </div>
 
                 <div className="bg-slate-900 p-8 rounded-[2rem] flex flex-col md:flex-row items-center justify-between gap-4">
-                  <p className="text-white font-bold text-lg">
+                  <p className="text-white font-bold text-lg leading-tight">
                     🛡️ Security Policy: Use {result.toolName} only for experimental use cases without uploading any sensitive files or private data.
                   </p>
                   <button onClick={() => setState(AppState.IDLE)} className="flex-shrink-0 bg-white/10 hover:bg-white/20 text-white px-6 py-3 rounded-xl font-bold border border-white/20 transition-all flex items-center gap-2">

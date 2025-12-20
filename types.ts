@@ -24,6 +24,7 @@ export interface GroundingSource {
 
 export interface AnalysisResult {
   toolName: string;
+  toolDescription: string;
   overallRiskScore: number;
   summary: string;
   topRisks: RiskPoint[];
