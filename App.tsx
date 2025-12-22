@@ -153,21 +153,10 @@ const App: React.FC = () => {
 
         {state === AppState.RESULT && result && (
           <div className="space-y-10 animate-in zoom-in-95 duration-500">
-            {/* TOOL HEADER */}
+            {/* ACTION HEADER (Web only) */}
             <div className="flex flex-col md:flex-row items-center justify-between gap-6 px-4 no-print">
-               <div className="flex items-center gap-4">
-                  <div className="p-4 bg-white rounded-3xl border shadow-sm">
-                     <Cpu className="w-8 h-8 text-indigo-600" />
-                  </div>
-                  <div>
-                    <h2 className="text-4xl font-black text-slate-900 tracking-tighter">
-                      Analysis for <span className="text-indigo-600">{result.toolName}</span>
-                    </h2>
-                    <p className="text-slate-600 font-medium text-lg leading-tight mt-1 max-w-2xl">
-                      {result.toolDescription}
-                    </p>
-                    <p className="text-slate-400 font-bold uppercase text-[10px] tracking-widest mt-2">Audit conducted in real-time</p>
-                  </div>
+               <div className="flex items-center gap-2 text-slate-400 uppercase text-[10px] font-black tracking-[0.2em]">
+                 <Cpu className="w-4 h-4" /> Real-time Audit Profile
                </div>
                <div className="flex items-center gap-3">
                  <button 
@@ -188,18 +177,40 @@ const App: React.FC = () => {
                </div>
             </div>
 
-            {/* MAIN REPORT CONTENT WRAPPER */}
-            <div id="report-container" className="space-y-12">
-              {/* PDF Header (Only visible in PDF/Print) */}
-              <div className="hidden print:block mb-8">
-                <div className="flex items-center gap-2 mb-4">
-                  <Shield className="w-6 h-6 text-slate-900" />
-                  <span className="text-2xl font-black italic">GuardAI</span>
+            {/* MAIN REPORT CONTENT WRAPPER (This is captured for the PDF) */}
+            <div id="report-container" className="space-y-12 bg-white md:bg-transparent rounded-[3rem] p-4 md:p-0">
+              
+              {/* PRIMARY HEADER (Visible in both PDF and Web) */}
+              <div className="mb-10 border-b-2 border-slate-900 pb-8 px-4">
+                <div className="flex items-center justify-between mb-8 no-print">
+                  <div className="flex items-center gap-4">
+                    <div className="p-3 bg-slate-900 rounded-2xl">
+                      <Shield className="w-6 h-6 text-white" />
+                    </div>
+                    <span className="text-2xl font-black italic">GuardAI</span>
+                  </div>
                 </div>
-                <h1 className="text-3xl font-black">AI Security Risk Assessment Report</h1>
-                <div className="h-1 w-full bg-slate-900 mt-2"></div>
-                <div className="mt-4 text-sm font-bold text-slate-500">Tool: {result.toolName} | Generated on: {new Date().toLocaleDateString()}</div>
-                <p className="mt-2 text-slate-700 font-medium">{result.toolDescription}</p>
+                
+                {/* PDF-Specific Branding Header */}
+                <div className="hidden print:flex items-center justify-between mb-8">
+                  <div className="flex items-center gap-2">
+                    <Shield className="w-6 h-6 text-slate-900" />
+                    <span className="text-2xl font-black italic">GuardAI</span>
+                  </div>
+                  <div className="text-right text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                    Confidential Security Audit | {new Date().toLocaleDateString()}
+                  </div>
+                </div>
+
+                <h1 className="text-4xl font-black text-slate-900 mb-3 tracking-tighter">
+                  Analysis for {result.toolName} (Free Version)
+                </h1>
+                <p className="text-xl font-medium text-slate-600 leading-tight max-w-4xl">
+                  {result.toolDescription}
+                </p>
+                <div className="mt-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                  Assessment Source: Official Privacy Policies & Grounded Security Research
+                </div>
               </div>
 
               {/* BIG VERDICT CARD */}
@@ -234,7 +245,7 @@ const App: React.FC = () => {
                         <p className="text-lg font-bold text-slate-700 leading-snug">{risk.point}</p>
                         {risk.sourceUrl && (
                           <span className="inline-flex items-center gap-1.5 text-[10px] font-black text-indigo-600 uppercase tracking-widest no-print">
-                            <ExternalLink className="w-3 h-3" /> External Reference
+                            <ExternalLink className="w-3 h-3" /> Reference Source
                           </span>
                         )}
                       </div>
@@ -291,7 +302,7 @@ const App: React.FC = () => {
                   <h4 className="text-xl font-black tracking-tight">Sources & Reference Documents</h4>
                 </div>
                 <p className="text-sm text-slate-500 font-medium px-1">
-                  The security assessment for <strong>{result.toolName}</strong> above was generated by analyzing the following official policies and technical documentation:
+                  The security assessment for <strong>{result.toolName}</strong> was generated by analyzing the following documentation:
                 </p>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   {result.sources && result.sources.length > 0 ? (
@@ -313,7 +324,7 @@ const App: React.FC = () => {
               
               {/* PDF Footer (Only visible in PDF) */}
               <div className="hidden print:block text-center pt-10 border-t border-slate-200 mt-20">
-                <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em]">Generated by GuardAI | Proprietary Intelligence</p>
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em]">Generated by GuardAI | Corporate AI Security Intelligence</p>
               </div>
             </div>
           </div>
