@@ -35,9 +35,15 @@ const App: React.FC = () => {
       margin: [10, 10],
       filename: `${result.toolName.replace(/\s+/g, '_')}_Security_Audit.pdf`,
       image: { type: 'jpeg', quality: 0.98 },
-      html2canvas: { scale: 2, useCORS: true, logging: false },
+      html2canvas: { 
+        scale: 2, 
+        useCORS: true, 
+        logging: false,
+        letterRendering: true
+      },
       jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
-      pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
+      pagebreak: { mode: ['avoid-all', 'css', 'legacy'] },
+      enableLinks: true // This is critical for clickable links in the generated PDF
     };
 
     try {
@@ -244,9 +250,14 @@ const App: React.FC = () => {
                       <div className="flex-1 space-y-2">
                         <p className="text-lg font-bold text-slate-700 leading-snug">{risk.point}</p>
                         {risk.sourceUrl && (
-                          <span className="inline-flex items-center gap-1.5 text-[10px] font-black text-indigo-600 uppercase tracking-widest no-print">
+                          <a 
+                            href={risk.sourceUrl} 
+                            target="_blank" 
+                            rel="noopener noreferrer" 
+                            className="inline-flex items-center gap-1.5 text-[10px] font-black text-indigo-600 uppercase tracking-widest hover:underline"
+                          >
                             <ExternalLink className="w-3 h-3" /> Reference Source
-                          </span>
+                          </a>
                         )}
                       </div>
                     </div>
@@ -307,12 +318,19 @@ const App: React.FC = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   {result.sources && result.sources.length > 0 ? (
                     result.sources.map((s, i) => (
-                      <div key={i} className="p-5 bg-slate-50 rounded-2xl border border-slate-100 flex items-start justify-between group shadow-sm">
+                      <a 
+                        key={i} 
+                        href={s.uri} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="p-5 bg-slate-50 rounded-2xl border border-slate-100 flex items-start justify-between group shadow-sm hover:border-indigo-200 transition-colors"
+                      >
                         <div className="flex flex-col gap-1 overflow-hidden">
-                          <span className="text-xs font-black text-slate-900 line-clamp-2 leading-tight">{s.title}</span>
+                          <span className="text-xs font-black text-slate-900 line-clamp-2 leading-tight group-hover:text-indigo-600">{s.title}</span>
                           <span className="text-[10px] text-slate-400 font-bold truncate mt-1">{s.uri}</span>
                         </div>
-                      </div>
+                        <ExternalLink className="w-3 h-3 text-slate-300 group-hover:text-indigo-400 flex-shrink-0 ml-2" />
+                      </a>
                     ))
                   ) : (
                     <div className="col-span-full p-8 bg-slate-50 rounded-2xl border border-dashed border-slate-200 text-center">
