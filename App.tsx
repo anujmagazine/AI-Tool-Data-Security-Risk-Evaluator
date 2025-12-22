@@ -2,13 +2,14 @@
 import React, { useState } from 'react';
 import { AppState, AnalysisRequest, AnalysisResult, RiskPoint, RiskTableRow } from './types';
 import { analyzeTool } from './services/geminiService';
-import { Shield, Search, Info, AlertTriangle, CheckCircle, ExternalLink, ArrowLeft, Zap, XCircle, AlertCircle, FileText, Globe, Link as LinkIcon, Cpu } from 'lucide-react';
+import { Shield, Search, Info, AlertTriangle, CheckCircle, ExternalLink, ArrowLeft, Zap, XCircle, AlertCircle, FileText, Globe, Link as LinkIcon, Cpu, Download } from 'lucide-react';
 
 const App: React.FC = () => {
   const [state, setState] = useState<AppState>(AppState.IDLE);
   const [request, setRequest] = useState<AnalysisRequest>({ toolName: '', website: '', useCase: '' });
   const [result, setResult] = useState<AnalysisResult | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [isDownloading, setIsDownloading] = useState(false);
 
   const handleAnalyze = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -22,6 +23,30 @@ const App: React.FC = () => {
     } catch (err: any) {
       setError(err.message);
       setState(AppState.ERROR);
+    }
+  };
+
+  const handleDownloadPDF = async () => {
+    if (!result) return;
+    setIsDownloading(true);
+    
+    const element = document.getElementById('report-container');
+    const opt = {
+      margin: [10, 10],
+      filename: `${result.toolName.replace(/\s+/g, '_')}_Security_Audit.pdf`,
+      image: { type: 'jpeg', quality: 0.98 },
+      html2canvas: { scale: 2, useCORS: true, logging: false },
+      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+      pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
+    };
+
+    try {
+      // @ts-ignore
+      await html2pdf().set(opt).from(element).save();
+    } catch (err) {
+      console.error('PDF Generation failed', err);
+    } finally {
+      setIsDownloading(false);
     }
   };
 
@@ -51,7 +76,7 @@ const App: React.FC = () => {
 
   return (
     <div className="min-h-screen flex flex-col bg-slate-50 text-slate-900">
-      <header className="bg-white border-b py-4 sticky top-0 z-20 shadow-sm">
+      <header className="bg-white border-b py-4 sticky top-0 z-20 shadow-sm no-print">
         <div className="max-w-6xl mx-auto px-6 flex items-center justify-between">
           <div className="flex items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity" onClick={() => setState(AppState.IDLE)}>
             <div className="bg-slate-900 p-1.5 rounded-lg">
@@ -129,7 +154,7 @@ const App: React.FC = () => {
         {state === AppState.RESULT && result && (
           <div className="space-y-10 animate-in zoom-in-95 duration-500">
             {/* TOOL HEADER */}
-            <div className="flex flex-col md:flex-row items-center justify-between gap-6 px-4">
+            <div className="flex flex-col md:flex-row items-center justify-between gap-6 px-4 no-print">
                <div className="flex items-center gap-4">
                   <div className="p-4 bg-white rounded-3xl border shadow-sm">
                      <Cpu className="w-8 h-8 text-indigo-600" />
@@ -138,33 +163,59 @@ const App: React.FC = () => {
                     <h2 className="text-4xl font-black text-slate-900 tracking-tighter">
                       Analysis for <span className="text-indigo-600">{result.toolName}</span>
                     </h2>
-                    {/* TOOL DESCRIPTION */}
                     <p className="text-slate-600 font-medium text-lg leading-tight mt-1 max-w-2xl">
                       {result.toolDescription}
                     </p>
                     <p className="text-slate-400 font-bold uppercase text-[10px] tracking-widest mt-2">Audit conducted in real-time</p>
                   </div>
                </div>
-               <button onClick={() => setState(AppState.IDLE)} className="flex items-center gap-2 text-sm font-black text-slate-400 hover:text-slate-900 transition-colors">
-                 <ArrowLeft className="w-4 h-4" /> Start New Audit
-               </button>
+               <div className="flex items-center gap-3">
+                 <button 
+                  onClick={handleDownloadPDF} 
+                  disabled={isDownloading}
+                  className="bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-400 text-white px-6 py-3 rounded-2xl font-black text-sm flex items-center gap-2 shadow-lg shadow-indigo-200 transition-all hover:-translate-y-0.5"
+                 >
+                   {isDownloading ? (
+                     <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                   ) : (
+                     <Download className="w-4 h-4" />
+                   )}
+                   {isDownloading ? 'Generating PDF...' : 'Download Report (PDF)'}
+                 </button>
+                 <button onClick={() => setState(AppState.IDLE)} className="flex items-center gap-2 text-sm font-black text-slate-400 hover:text-slate-900 transition-colors">
+                   <ArrowLeft className="w-4 h-4" /> Start New Audit
+                 </button>
+               </div>
             </div>
 
-            {/* BIG VERDICT CARD */}
-            <div className={`rounded-[3rem] p-10 shadow-xl relative ${getVerdictTheme(result.recommendation).bg} ${getVerdictTheme(result.recommendation).text}`}>
-              <div className="relative z-10 flex flex-col md:flex-row items-center gap-8">
-                <div className="flex-shrink-0 bg-white/20 p-6 rounded-3xl backdrop-blur-sm">
-                  {getVerdictTheme(result.recommendation).icon}
+            {/* MAIN REPORT CONTENT WRAPPER */}
+            <div id="report-container" className="space-y-12">
+              {/* PDF Header (Only visible in PDF/Print) */}
+              <div className="hidden print:block mb-8">
+                <div className="flex items-center gap-2 mb-4">
+                  <Shield className="w-6 h-6 text-slate-900" />
+                  <span className="text-2xl font-black italic">GuardAI</span>
                 </div>
-                <div className="text-center md:text-left space-y-2">
-                  <span className="text-xs font-black uppercase tracking-widest opacity-80">Security Audit Result</span>
-                  <h2 className="text-5xl font-black leading-none tracking-tighter">{getVerdictTheme(result.recommendation).label}</h2>
-                  <p className="text-xl font-medium opacity-90 max-w-2xl">{result.summary}</p>
+                <h1 className="text-3xl font-black">AI Security Risk Assessment Report</h1>
+                <div className="h-1 w-full bg-slate-900 mt-2"></div>
+                <div className="mt-4 text-sm font-bold text-slate-500">Tool: {result.toolName} | Generated on: {new Date().toLocaleDateString()}</div>
+                <p className="mt-2 text-slate-700 font-medium">{result.toolDescription}</p>
+              </div>
+
+              {/* BIG VERDICT CARD */}
+              <div className={`rounded-[3rem] p-10 shadow-xl relative ${getVerdictTheme(result.recommendation).bg} ${getVerdictTheme(result.recommendation).text}`}>
+                <div className="relative z-10 flex flex-col md:flex-row items-center gap-8">
+                  <div className="flex-shrink-0 bg-white/20 p-6 rounded-3xl backdrop-blur-sm">
+                    {getVerdictTheme(result.recommendation).icon}
+                  </div>
+                  <div className="text-center md:text-left space-y-2">
+                    <span className="text-xs font-black uppercase tracking-widest opacity-80">Security Audit Result</span>
+                    <h2 className="text-5xl font-black leading-none tracking-tighter">{getVerdictTheme(result.recommendation).label}</h2>
+                    <p className="text-xl font-medium opacity-90 max-w-2xl">{result.summary}</p>
+                  </div>
                 </div>
               </div>
-            </div>
 
-            <div className="space-y-12">
               {/* TOP TRADE-OFFS */}
               <div className="bg-white p-10 rounded-[3rem] border shadow-sm space-y-8">
                 <div className="flex items-center gap-4">
@@ -175,16 +226,16 @@ const App: React.FC = () => {
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {result.topRisks?.slice(0, 6).map((risk, idx) => (
-                    <div key={idx} className="flex gap-4 p-6 bg-slate-50 rounded-[2rem] border border-slate-100 group hover:border-indigo-200 transition-colors">
+                    <div key={idx} className="flex gap-4 p-6 bg-slate-50 rounded-[2rem] border border-slate-100 group transition-colors">
                       <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center border shadow-sm flex-shrink-0">
                         <span className="text-slate-900 font-black text-lg">{idx + 1}</span>
                       </div>
                       <div className="flex-1 space-y-2">
-                        <p className="text-lg font-bold text-slate-700 leading-snug group-hover:text-slate-900">{risk.point}</p>
+                        <p className="text-lg font-bold text-slate-700 leading-snug">{risk.point}</p>
                         {risk.sourceUrl && (
-                          <a href={risk.sourceUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 text-[10px] font-black text-indigo-600 hover:text-indigo-800 uppercase tracking-widest">
-                            <ExternalLink className="w-3 h-3" /> View Source
-                          </a>
+                          <span className="inline-flex items-center gap-1.5 text-[10px] font-black text-indigo-600 uppercase tracking-widest no-print">
+                            <ExternalLink className="w-3 h-3" /> External Reference
+                          </span>
                         )}
                       </div>
                     </div>
@@ -230,9 +281,6 @@ const App: React.FC = () => {
                   <p className="text-white font-bold text-lg leading-tight">
                     🛡️ Security Policy: Use {result.toolName} only for experimental use cases without uploading any sensitive files or private data.
                   </p>
-                  <button onClick={() => setState(AppState.IDLE)} className="flex-shrink-0 bg-white/10 hover:bg-white/20 text-white px-6 py-3 rounded-xl font-bold border border-white/20 transition-all flex items-center gap-2">
-                    <ArrowLeft className="w-4 h-4" /> New Audit
-                  </button>
                 </div>
               </div>
 
@@ -243,18 +291,17 @@ const App: React.FC = () => {
                   <h4 className="text-xl font-black tracking-tight">Sources & Reference Documents</h4>
                 </div>
                 <p className="text-sm text-slate-500 font-medium px-1">
-                  The security assessment for <strong>{result.toolName}</strong> above was generated by analyzing the following official policies, technical documentation, and grounding sources:
+                  The security assessment for <strong>{result.toolName}</strong> above was generated by analyzing the following official policies and technical documentation:
                 </p>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   {result.sources && result.sources.length > 0 ? (
                     result.sources.map((s, i) => (
-                      <a key={i} href={s.uri} target="_blank" rel="noopener noreferrer" className="p-5 bg-slate-50 rounded-2xl border border-slate-100 flex items-start justify-between hover:border-indigo-200 hover:bg-white transition-all group shadow-sm">
+                      <div key={i} className="p-5 bg-slate-50 rounded-2xl border border-slate-100 flex items-start justify-between group shadow-sm">
                         <div className="flex flex-col gap-1 overflow-hidden">
                           <span className="text-xs font-black text-slate-900 line-clamp-2 leading-tight">{s.title}</span>
                           <span className="text-[10px] text-slate-400 font-bold truncate mt-1">{s.uri}</span>
                         </div>
-                        <ExternalLink className="w-4 h-4 text-slate-300 group-hover:text-indigo-500 flex-shrink-0 ml-4" />
-                      </a>
+                      </div>
                     ))
                   ) : (
                     <div className="col-span-full p-8 bg-slate-50 rounded-2xl border border-dashed border-slate-200 text-center">
@@ -262,6 +309,11 @@ const App: React.FC = () => {
                     </div>
                   )}
                 </div>
+              </div>
+              
+              {/* PDF Footer (Only visible in PDF) */}
+              <div className="hidden print:block text-center pt-10 border-t border-slate-200 mt-20">
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em]">Generated by GuardAI | Proprietary Intelligence</p>
               </div>
             </div>
           </div>
@@ -279,7 +331,7 @@ const App: React.FC = () => {
         )}
       </main>
 
-      <footer className="py-10 border-t bg-white">
+      <footer className="py-10 border-t bg-white no-print">
         <div className="max-w-6xl mx-auto px-6 text-center">
           <p className="text-xs font-black text-slate-400 uppercase tracking-[0.3em]">GuardAI | Corporate AI Security Intelligence</p>
         </div>
