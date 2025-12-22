@@ -1,6 +1,6 @@
 
 import { GoogleGenAI, GenerateContentResponse } from "@google/genai";
-import { AnalysisRequest, AnalysisResult } from "../types";
+import { AnalysisRequest, AnalysisResult, GroundingSource } from "../types";
 
 export const analyzeTool = async (request: AnalysisRequest): Promise<AnalysisResult> => {
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
@@ -11,28 +11,28 @@ export const analyzeTool = async (request: AnalysisRequest): Promise<AnalysisRes
     ${request.useCase ? `Context/Use Case: ${request.useCase}` : ''}
 
     STRICT ANALYSIS REQUIREMENTS:
-    1. TOOL DESCRIPTION: Provide a very brief (1-sentence) description of what this tool actually does in simple, non-technical language (e.g., "A tool for generating marketing images from text").
-    2. TOP TRADE-OFFS: Identify the top 5-6 most critical risks in prioritized order. These are the immediate "deal-breakers".
-    3. FULL RISK PROFILE (Exhaustive): Create a comprehensive list of ALL potential data security and privacy risks. 
-       - Aim for 10 or more specific entries if any are present in the documentation/history.
-       - A single category (like 'Model Training' or 'Data Retention') can have multiple specific risks.
-       - Do not skip minor risks; we need a complete picture.
-    4. LANGUAGE: Use extremely easy, non-technical language. Descriptions in the table must be under 20 words.
-    5. VERDICT: Restricted (Red), Conditional (Amber), or Approved (Green). If user data is used for model training in the free version, it MUST be marked Restricted.
+    1. TOOL DESCRIPTION: Provide a very brief (1-sentence) description.
+    2. TOP TRADE-OFFS: Identify 5-6 critical risks.
+    3. FULL RISK PROFILE: Comprehensive list (10+ entries).
+    4. SOURCES: You MUST find and provide the direct URLs to the tool's official Privacy Policy, Terms of Service, and any security/data handling documentation you find via search.
 
     Return a JSON response:
     {
       "toolName": "Name",
-      "toolDescription": "1-sentence simple explanation of the tool.",
+      "toolDescription": "1-sentence explanation",
       "overallRiskScore": 0-100,
-      "summary": "1-sentence decision summary for a manager.",
+      "summary": "1-sentence decision summary",
       "topRisks": [
-        { "point": "Simple risk description", "sourceUrl": "Direct link if available", "priority": 1 }
+        { "point": "Simple risk description", "sourceUrl": "Direct link to evidence", "priority": 1 }
       ],
       "riskTable": [
-        { "category": "Category Name", "description": "Max 20 word easy description", "severity": "High/Medium/Low" }
+        { "category": "Category", "description": "Max 20 word description", "severity": "High/Medium/Low" }
       ],
-      "recommendation": "Restricted, Conditional, or Approved"
+      "recommendation": "Restricted, Conditional, or Approved",
+      "sources": [
+        { "title": "e.g. Privacy Policy", "uri": "https://..." },
+        { "title": "e.g. Terms of Service", "uri": "https://..." }
+      ]
     }
   `;
 
@@ -49,23 +49,38 @@ export const analyzeTool = async (request: AnalysisRequest): Promise<AnalysisRes
     const resultText = response.text || "{}";
     const parsed = JSON.parse(resultText);
 
-    // Extract all grounding sources for the final section
-    const sources: any[] = [];
+    // Also extract grounding sources from the Search Tool metadata for redundancy
+    const groundingSources: GroundingSource[] = [];
     const chunks = response.candidates?.[0]?.groundingMetadata?.groundingChunks;
     if (chunks) {
       chunks.forEach((chunk: any) => {
-        if (chunk.web) {
-          sources.push({
-            title: chunk.web.title || 'Official Security Source',
+        if (chunk.web && chunk.web.uri) {
+          groundingSources.push({
+            title: chunk.web.title || 'Security Reference',
             uri: chunk.web.uri
           });
         }
       });
     }
 
-    return { ...parsed, sources };
+    // Merge sources from JSON and grounding metadata, deduplicate by URI
+    const allSourcesMap = new Map<string, GroundingSource>();
+    
+    // Add sources from JSON first
+    (parsed.sources || []).forEach((s: GroundingSource) => {
+      if (s.uri) allSourcesMap.set(s.uri, s);
+    });
+
+    // Add grounding sources (might be more current)
+    groundingSources.forEach((s: GroundingSource) => {
+      if (!allSourcesMap.has(s.uri)) {
+        allSourcesMap.set(s.uri, s);
+      }
+    });
+
+    return { ...parsed, sources: Array.from(allSourcesMap.values()) };
   } catch (error) {
     console.error("Analysis failed:", error);
-    throw new Error("Security audit failed. Please check the tool name and try again.");
+    throw new Error("Security audit failed. Please try again.");
   }
 };

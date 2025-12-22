@@ -31,19 +31,21 @@ const App: React.FC = () => {
     setIsDownloading(true);
     
     const element = document.getElementById('report-container');
+    
     const opt = {
-      margin: [10, 10],
+      margin: 10,
       filename: `${result.toolName.replace(/\s+/g, '_')}_Security_Audit.pdf`,
       image: { type: 'jpeg', quality: 0.98 },
       html2canvas: { 
         scale: 2, 
         useCORS: true, 
         logging: false,
-        letterRendering: true
+        letterRendering: true,
+        scrollY: 0
       },
-      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait', compress: true },
       pagebreak: { mode: ['avoid-all', 'css', 'legacy'] },
-      enableLinks: true // This is critical for clickable links in the generated PDF
+      enableLinks: true // Essential for making <a> tags clickable in PDF
     };
 
     try {
@@ -183,28 +185,20 @@ const App: React.FC = () => {
                </div>
             </div>
 
-            {/* MAIN REPORT CONTENT WRAPPER (This is captured for the PDF) */}
-            <div id="report-container" className="space-y-12 bg-white md:bg-transparent rounded-[3rem] p-4 md:p-0">
+            {/* MAIN REPORT CONTENT WRAPPER */}
+            <div id="report-container" className="space-y-12 bg-white rounded-[3rem] p-8 md:p-12 shadow-sm">
               
-              {/* PRIMARY HEADER (Visible in both PDF and Web) */}
-              <div className="mb-10 border-b-2 border-slate-900 pb-8 px-4">
-                <div className="flex items-center justify-between mb-8 no-print">
+              {/* PRIMARY HEADER */}
+              <div className="mb-10 border-b-2 border-slate-900 pb-8">
+                <div className="flex items-center justify-between mb-8">
                   <div className="flex items-center gap-4">
                     <div className="p-3 bg-slate-900 rounded-2xl">
                       <Shield className="w-6 h-6 text-white" />
                     </div>
                     <span className="text-2xl font-black italic">GuardAI</span>
                   </div>
-                </div>
-                
-                {/* PDF-Specific Branding Header */}
-                <div className="hidden print:flex items-center justify-between mb-8">
-                  <div className="flex items-center gap-2">
-                    <Shield className="w-6 h-6 text-slate-900" />
-                    <span className="text-2xl font-black italic">GuardAI</span>
-                  </div>
                   <div className="text-right text-[10px] font-black text-slate-400 uppercase tracking-widest">
-                    Confidential Security Audit | {new Date().toLocaleDateString()}
+                    Corporate Security Audit | {new Date().toLocaleDateString()}
                   </div>
                 </div>
 
@@ -215,7 +209,7 @@ const App: React.FC = () => {
                   {result.toolDescription}
                 </p>
                 <div className="mt-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">
-                  Assessment Source: Official Privacy Policies & Grounded Security Research
+                  Assessment Profile: Data Privacy & Security Compliance Audit
                 </div>
               </div>
 
@@ -226,7 +220,7 @@ const App: React.FC = () => {
                     {getVerdictTheme(result.recommendation).icon}
                   </div>
                   <div className="text-center md:text-left space-y-2">
-                    <span className="text-xs font-black uppercase tracking-widest opacity-80">Security Audit Result</span>
+                    <span className="text-xs font-black uppercase tracking-widest opacity-80">Final Security Verdict</span>
                     <h2 className="text-5xl font-black leading-none tracking-tighter">{getVerdictTheme(result.recommendation).label}</h2>
                     <p className="text-xl font-medium opacity-90 max-w-2xl">{result.summary}</p>
                   </div>
@@ -234,29 +228,29 @@ const App: React.FC = () => {
               </div>
 
               {/* TOP TRADE-OFFS */}
-              <div className="bg-white p-10 rounded-[3rem] border shadow-sm space-y-8">
+              <div className="p-2 space-y-8">
                 <div className="flex items-center gap-4">
                   <div className="p-3 bg-red-50 rounded-2xl border border-red-100">
                     <AlertTriangle className="w-8 h-8 text-red-500" />
                   </div>
-                  <h3 className="text-3xl font-black tracking-tight">Critical Trade-offs</h3>
+                  <h3 className="text-3xl font-black tracking-tight">Critical Data Trade-offs</h3>
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {result.topRisks?.slice(0, 6).map((risk, idx) => (
-                    <div key={idx} className="flex gap-4 p-6 bg-slate-50 rounded-[2rem] border border-slate-100 group transition-colors">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {result.topRisks?.map((risk, idx) => (
+                    <div key={idx} className="flex gap-4 p-6 bg-slate-50 rounded-[2rem] border border-slate-100">
                       <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center border shadow-sm flex-shrink-0">
                         <span className="text-slate-900 font-black text-lg">{idx + 1}</span>
                       </div>
-                      <div className="flex-1 space-y-2">
+                      <div className="flex-1 space-y-3">
                         <p className="text-lg font-bold text-slate-700 leading-snug">{risk.point}</p>
                         {risk.sourceUrl && (
                           <a 
                             href={risk.sourceUrl} 
                             target="_blank" 
                             rel="noopener noreferrer" 
-                            className="inline-flex items-center gap-1.5 text-[10px] font-black text-indigo-600 uppercase tracking-widest hover:underline"
+                            className="inline-block text-[11px] font-black text-indigo-600 uppercase tracking-widest underline underline-offset-4 decoration-indigo-300 hover:decoration-indigo-600"
                           >
-                            <ExternalLink className="w-3 h-3" /> Reference Source
+                            Read More
                           </a>
                         )}
                       </div>
@@ -265,32 +259,30 @@ const App: React.FC = () => {
                 </div>
               </div>
 
-              {/* DETAILED RISK TABLE - EXHAUSTIVE */}
-              <div className="bg-white p-10 rounded-[3rem] border shadow-sm space-y-8 overflow-hidden">
+              {/* DETAILED RISK TABLE */}
+              <div className="p-2 space-y-8 overflow-hidden">
                 <div className="flex items-center gap-4">
                   <div className="p-3 bg-indigo-50 rounded-2xl border border-indigo-100">
                     <FileText className="w-8 h-8 text-indigo-600" />
                   </div>
-                  <h3 className="text-3xl font-black tracking-tight">Full Security Profile</h3>
+                  <h3 className="text-3xl font-black tracking-tight">Full Security Breakdown</h3>
                 </div>
                 
-                <div className="overflow-x-auto">
-                  <table className="w-full text-left border-collapse">
+                <div className="overflow-x-auto border rounded-[2rem]">
+                  <table className="w-full text-left border-collapse bg-white">
                     <thead>
                       <tr className="border-b-2 border-slate-100">
-                        <th className="py-4 px-4 text-xs font-black text-slate-400 uppercase tracking-widest">#</th>
-                        <th className="py-4 px-4 text-xs font-black text-slate-400 uppercase tracking-widest">Risk Category</th>
-                        <th className="py-4 px-4 text-xs font-black text-slate-400 uppercase tracking-widest">What this means</th>
-                        <th className="py-4 px-4 text-xs font-black text-slate-400 uppercase tracking-widest text-right">Severity</th>
+                        <th className="py-4 px-6 text-xs font-black text-slate-400 uppercase tracking-widest">Risk Area</th>
+                        <th className="py-4 px-6 text-xs font-black text-slate-400 uppercase tracking-widest">Security Impact</th>
+                        <th className="py-4 px-6 text-xs font-black text-slate-400 uppercase tracking-widest text-right">Severity</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100">
                       {result.riskTable?.map((row, idx) => (
-                        <tr key={idx} className="hover:bg-slate-50/50 transition-colors">
-                          <td className="py-5 px-4 font-bold text-slate-400">{idx + 1}</td>
-                          <td className="py-5 px-4 font-black text-slate-900 whitespace-nowrap">{row.category}</td>
-                          <td className="py-5 px-4 text-sm font-medium text-slate-600 leading-relaxed max-w-md">{row.description}</td>
-                          <td className="py-5 px-4 text-right">
+                        <tr key={idx}>
+                          <td className="py-5 px-6 font-black text-slate-900">{row.category}</td>
+                          <td className="py-5 px-6 text-sm font-medium text-slate-600 leading-relaxed">{row.description}</td>
+                          <td className="py-5 px-6 text-right whitespace-nowrap">
                             <SeverityBadge severity={row.severity} />
                           </td>
                         </tr>
@@ -298,51 +290,50 @@ const App: React.FC = () => {
                     </tbody>
                   </table>
                 </div>
-
-                <div className="bg-slate-900 p-8 rounded-[2rem] flex flex-col md:flex-row items-center justify-between gap-4">
-                  <p className="text-white font-bold text-lg leading-tight">
-                    🛡️ Security Policy: Use {result.toolName} only for experimental use cases without uploading any sensitive files or private data.
-                  </p>
-                </div>
               </div>
 
               {/* SOURCES SECTION */}
-              <div id="sources" className="bg-white p-10 rounded-[3rem] border shadow-sm space-y-6">
-                <div className="flex items-center gap-3">
-                  <Globe className="w-6 h-6 text-slate-400" />
-                  <h4 className="text-xl font-black tracking-tight">Sources & Reference Documents</h4>
+              <div id="sources" className="p-2 space-y-8">
+                <div className="flex items-center gap-4">
+                  <div className="p-3 bg-slate-100 rounded-2xl border border-slate-200">
+                    <Globe className="w-8 h-8 text-slate-600" />
+                  </div>
+                  <h3 className="text-3xl font-black tracking-tight">Sources & Reference Documents</h3>
                 </div>
-                <p className="text-sm text-slate-500 font-medium px-1">
-                  The security assessment for <strong>{result.toolName}</strong> was generated by analyzing the following documentation:
-                </p>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {result.sources && result.sources.length > 0 ? (
-                    result.sources.map((s, i) => (
-                      <a 
-                        key={i} 
-                        href={s.uri} 
-                        target="_blank" 
-                        rel="noopener noreferrer"
-                        className="p-5 bg-slate-50 rounded-2xl border border-slate-100 flex items-start justify-between group shadow-sm hover:border-indigo-200 transition-colors"
-                      >
-                        <div className="flex flex-col gap-1 overflow-hidden">
-                          <span className="text-xs font-black text-slate-900 line-clamp-2 leading-tight group-hover:text-indigo-600">{s.title}</span>
-                          <span className="text-[10px] text-slate-400 font-bold truncate mt-1">{s.uri}</span>
+                
+                <div className="bg-slate-50 p-10 rounded-[3rem] border border-slate-100 space-y-6">
+                  <p className="text-sm font-bold text-slate-500 mb-6">
+                    This report was generated by analyzing the following real-time documentation and privacy statements for <strong>{result.toolName}</strong>:
+                  </p>
+                  
+                  <div className="space-y-4">
+                    {result.sources && result.sources.length > 0 ? (
+                      result.sources.map((s, i) => (
+                        <div key={i} className="pb-4 border-b border-slate-200 last:border-0">
+                          {/* We use a simple vertical layout for links to ensure PDF generator correctly maps the hit area */}
+                          <div className="text-sm font-black text-slate-900 mb-1">{s.title}</div>
+                          <a 
+                            href={s.uri} 
+                            target="_blank" 
+                            rel="noopener noreferrer" 
+                            className="text-xs text-indigo-600 underline font-medium break-all block py-1"
+                          >
+                            {s.uri}
+                          </a>
                         </div>
-                        <ExternalLink className="w-3 h-3 text-slate-300 group-hover:text-indigo-400 flex-shrink-0 ml-2" />
-                      </a>
-                    ))
-                  ) : (
-                    <div className="col-span-full p-8 bg-slate-50 rounded-2xl border border-dashed border-slate-200 text-center">
-                      <p className="text-slate-400 font-bold">Official {result.toolName} Privacy Policy & Terms of Service</p>
-                    </div>
-                  )}
+                      ))
+                    ) : (
+                      <div className="text-center py-8">
+                        <p className="text-slate-400 font-bold italic">Official {result.toolName} Documentation & Privacy Statements</p>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
               
-              {/* PDF Footer (Only visible in PDF) */}
-              <div className="hidden print:block text-center pt-10 border-t border-slate-200 mt-20">
-                <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em]">Generated by GuardAI | Corporate AI Security Intelligence</p>
+              {/* PDF Footer */}
+              <div className="hidden print:block text-center pt-10 border-t border-slate-200 mt-10">
+                <p className="text-[10px] font-black text-slate-300 uppercase tracking-[0.4em]">Confidential Risk Report Generated by GuardAI</p>
               </div>
             </div>
           </div>
@@ -354,7 +345,7 @@ const App: React.FC = () => {
                {error}
              </div>
              <button onClick={() => setState(AppState.IDLE)} className="bg-slate-900 text-white px-8 py-4 rounded-2xl font-black">
-               Return to Home
+               Back to Start
              </button>
           </div>
         )}
@@ -362,7 +353,7 @@ const App: React.FC = () => {
 
       <footer className="py-10 border-t bg-white no-print">
         <div className="max-w-6xl mx-auto px-6 text-center">
-          <p className="text-xs font-black text-slate-400 uppercase tracking-[0.3em]">GuardAI | Corporate AI Security Intelligence</p>
+          <p className="text-xs font-black text-slate-300 uppercase tracking-[0.3em]">GuardAI Security Intelligence</p>
         </div>
       </footer>
     </div>
