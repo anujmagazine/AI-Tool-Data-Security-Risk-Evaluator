@@ -20,6 +20,7 @@ export interface RiskTableRow {
 export interface GroundingSource {
   title: string;
   uri: string;
+  lastUpdated?: string;
 }
 
 export interface AnalysisResult {
