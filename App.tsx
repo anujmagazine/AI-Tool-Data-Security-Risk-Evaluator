@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { AppState, AnalysisRequest, AnalysisResult, RiskPoint, RiskTableRow } from './types';
 import { analyzeTool } from './services/geminiService';
-import { Shield, Search, Info, AlertTriangle, CheckCircle, ExternalLink, ArrowLeft, Zap, XCircle, AlertCircle, FileText, Globe, Link as LinkIcon, Cpu, Download, Calendar } from 'lucide-react';
+import { Shield, Search, Info, AlertTriangle, CheckCircle, ExternalLink, ArrowLeft, Zap, XCircle, AlertCircle, FileText, Globe, Link as LinkIcon, Cpu, Download, Calendar, Flame } from 'lucide-react';
 
 const App: React.FC = () => {
   const [state, setState] = useState<AppState>(AppState.IDLE);
@@ -210,6 +210,29 @@ const App: React.FC = () => {
                 </p>
                 <div className="mt-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">
                   Assessment Profile: Data Privacy & Security Compliance Audit
+                </div>
+              </div>
+
+              {/* CREATIVE WARNING / TRUTH BOMB */}
+              <div className="relative overflow-hidden bg-orange-50 border-4 border-orange-500 rounded-[2.5rem] p-8 md:p-10 shadow-lg transform -rotate-1">
+                <div className="absolute top-0 right-0 p-4 opacity-10">
+                   <Flame className="w-32 h-32 text-orange-600" />
+                </div>
+                <div className="relative z-10 flex flex-col md:flex-row items-center gap-6">
+                  <div className="flex-shrink-0 bg-orange-500 p-4 rounded-2xl shadow-md transform rotate-3">
+                    <AlertTriangle className="w-10 h-10 text-white" />
+                  </div>
+                  <div className="flex-1 text-center md:text-left">
+                    <div className="inline-block bg-orange-500 text-white text-[10px] font-black uppercase tracking-[0.2em] px-3 py-1 rounded-full mb-3 shadow-sm">
+                      Hard Truth: Free Tier Reality Check
+                    </div>
+                    <h3 className="text-2xl md:text-3xl font-black text-orange-900 italic tracking-tight leading-tight">
+                      "{result.creativeWarning}"
+                    </h3>
+                  </div>
+                </div>
+                <div className="mt-4 pt-4 border-t border-orange-200 text-[10px] font-bold text-orange-600 uppercase tracking-widest text-center md:text-left">
+                   Caution: Data Sovereignty is compromised in the free tier
                 </div>
               </div>
 

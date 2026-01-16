@@ -28,6 +28,7 @@ export interface AnalysisResult {
   toolDescription: string;
   overallRiskScore: number;
   summary: string;
+  creativeWarning: string;
   topRisks: RiskPoint[];
   riskTable: RiskTableRow[];
   recommendation: 'Approved' | 'Conditional' | 'Restricted';

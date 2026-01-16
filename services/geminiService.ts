@@ -6,7 +6,7 @@ export const analyzeTool = async (request: AnalysisRequest): Promise<AnalysisRes
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
   
   const prompt = `
-    Act as a Corporate Data Safety Officer. Analyze the FREE version of the AI tool: "${request.toolName}"
+    Act as a Corporate Data Safety Officer with a sense of humor. Analyze the FREE version of the AI tool: "${request.toolName}"
     ${request.website ? `Official Website: ${request.website}` : ''}
     ${request.useCase ? `Context/Use Case: ${request.useCase}` : ''}
 
@@ -14,8 +14,9 @@ export const analyzeTool = async (request: AnalysisRequest): Promise<AnalysisRes
     1. TOOL DESCRIPTION: Provide a very brief (1-sentence) description.
     2. TOP TRADE-OFFS: Identify 5-6 critical risks.
     3. FULL RISK PROFILE: Comprehensive list (10+ entries).
-    4. SOURCES: You MUST find and provide the direct URLs to the tool's official Privacy Policy, Terms of Service, and any security/data handling documentation you find via search. 
-    5. FRESHNESS: For every source, you MUST identify the "Last Updated" date or "Effective Date" mentioned on the page. If not explicitly found, estimate the month/year based on content or recent news.
+    4. CREATIVE WARNING: Write a punchy, creative, slightly satirical "Reality Check" or "Truth Bomb" (max 20 words) explaining why using the FREE version is a bad idea for the company. Tailor it to how this specific tool handles data. (e.g., "If you aren't paying, your trade secrets are the model's lunch.")
+    5. SOURCES: You MUST find and provide the direct URLs to the tool's official Privacy Policy, Terms of Service, and any security/data handling documentation.
+    6. FRESHNESS: Identify the "Last Updated" date for all sources.
 
     Return a JSON response:
     {
@@ -23,6 +24,7 @@ export const analyzeTool = async (request: AnalysisRequest): Promise<AnalysisRes
       "toolDescription": "1-sentence explanation",
       "overallRiskScore": 0-100,
       "summary": "1-sentence decision summary",
+      "creativeWarning": "Punchy reality check here",
       "topRisks": [
         { "point": "Simple risk description", "sourceUrl": "Direct link to evidence", "priority": 1 }
       ],
@@ -31,8 +33,7 @@ export const analyzeTool = async (request: AnalysisRequest): Promise<AnalysisRes
       ],
       "recommendation": "Restricted, Conditional, or Approved",
       "sources": [
-        { "title": "e.g. Privacy Policy", "uri": "https://...", "lastUpdated": "e.g. March 12, 2024" },
-        { "title": "e.g. Terms of Service", "uri": "https://...", "lastUpdated": "e.g. Jan 2024" }
+        { "title": "e.g. Privacy Policy", "uri": "https://...", "lastUpdated": "e.g. March 12, 2024" }
       ]
     }
   `;
@@ -50,7 +51,6 @@ export const analyzeTool = async (request: AnalysisRequest): Promise<AnalysisRes
     const resultText = response.text || "{}";
     const parsed = JSON.parse(resultText);
 
-    // Also extract grounding sources from the Search Tool metadata for redundancy
     const groundingSources: GroundingSource[] = [];
     const chunks = response.candidates?.[0]?.groundingMetadata?.groundingChunks;
     if (chunks) {
@@ -59,25 +59,18 @@ export const analyzeTool = async (request: AnalysisRequest): Promise<AnalysisRes
           groundingSources.push({
             title: chunk.web.title || 'Security Reference',
             uri: chunk.web.uri,
-            lastUpdated: 'Recent' // Default for grounding chunks if not in JSON
+            lastUpdated: 'Recent'
           });
         }
       });
     }
 
-    // Merge sources from JSON and grounding metadata, deduplicate by URI
     const allSourcesMap = new Map<string, GroundingSource>();
-    
-    // Add sources from JSON first (they have the more accurate 'lastUpdated' from the model's reasoning)
     (parsed.sources || []).forEach((s: GroundingSource) => {
       if (s.uri) allSourcesMap.set(s.uri, s);
     });
-
-    // Add grounding sources (might be more current)
     groundingSources.forEach((s: GroundingSource) => {
-      if (!allSourcesMap.has(s.uri)) {
-        allSourcesMap.set(s.uri, s);
-      }
+      if (!allSourcesMap.has(s.uri)) allSourcesMap.set(s.uri, s);
     });
 
     return { ...parsed, sources: Array.from(allSourcesMap.values()) };
