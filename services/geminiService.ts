@@ -14,9 +14,10 @@ export const analyzeTool = async (request: AnalysisRequest): Promise<AnalysisRes
     1. TOOL DESCRIPTION: Provide a very brief (1-sentence) description.
     2. TOP TRADE-OFFS: Identify 5-6 critical risks.
     3. FULL RISK PROFILE: Comprehensive list (10+ entries).
-    4. CREATIVE WARNING: Write a punchy, creative, slightly satirical "Reality Check" or "Truth Bomb" (max 20 words) explaining why using the FREE version is a bad idea for the company. Tailor it to how this specific tool handles data. (e.g., "If you aren't paying, your trade secrets are the model's lunch.")
-    5. SOURCES: You MUST find and provide the direct URLs to the tool's official Privacy Policy, Terms of Service, and any security/data handling documentation.
-    6. FRESHNESS: Identify the "Last Updated" date for all sources.
+    4. USER IMPACT: For EVERY entry in the risk table, provide a "scenario"—a relatable, real-world example of what could happen to a regular employee using it (e.g., "Imagine if a competitor finds your internal project timeline via a search engine").
+    5. CREATIVE WARNING: Write a punchy, creative, slightly satirical "Truth Bomb" (max 20 words).
+    6. SOURCES: Direct URLs to official Privacy Policy, Terms of Service, etc.
+    7. FRESHNESS: Identify "Last Updated" dates.
 
     Return a JSON response:
     {
@@ -24,16 +25,21 @@ export const analyzeTool = async (request: AnalysisRequest): Promise<AnalysisRes
       "toolDescription": "1-sentence explanation",
       "overallRiskScore": 0-100,
       "summary": "1-sentence decision summary",
-      "creativeWarning": "Punchy reality check here",
+      "creativeWarning": "Punchy reality check",
       "topRisks": [
-        { "point": "Simple risk description", "sourceUrl": "Direct link to evidence", "priority": 1 }
+        { "point": "Simple risk description", "sourceUrl": "Direct link", "priority": 1 }
       ],
       "riskTable": [
-        { "category": "Category", "description": "Max 20 word description", "severity": "High/Medium/Low" }
+        { 
+          "category": "Category Name", 
+          "description": "Professional security description", 
+          "scenario": "A relatable 'Imagine if...' scenario", 
+          "severity": "High/Medium/Low" 
+        }
       ],
       "recommendation": "Restricted, Conditional, or Approved",
       "sources": [
-        { "title": "e.g. Privacy Policy", "uri": "https://...", "lastUpdated": "e.g. March 12, 2024" }
+        { "title": "Privacy Policy", "uri": "https://...", "lastUpdated": "Date" }
       ]
     }
   `;

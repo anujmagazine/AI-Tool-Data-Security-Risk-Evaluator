@@ -14,6 +14,7 @@ export interface RiskPoint {
 export interface RiskTableRow {
   category: string;
   description: string;
+  scenario: string;
   severity: 'High' | 'Medium' | 'Low';
 }
 

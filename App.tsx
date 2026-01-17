@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { AppState, AnalysisRequest, AnalysisResult, RiskPoint, RiskTableRow } from './types';
 import { analyzeTool } from './services/geminiService';
-import { Shield, Search, Info, AlertTriangle, CheckCircle, ExternalLink, ArrowLeft, Zap, XCircle, AlertCircle, FileText, Globe, Link as LinkIcon, Cpu, Download, Calendar, Flame } from 'lucide-react';
+import { Shield, Search, Info, AlertTriangle, CheckCircle, ExternalLink, ArrowLeft, Zap, XCircle, AlertCircle, FileText, Globe, Link as LinkIcon, Cpu, Download, Calendar, Flame, Lightbulb } from 'lucide-react';
 
 const App: React.FC = () => {
   const [state, setState] = useState<AppState>(AppState.IDLE);
@@ -294,18 +294,31 @@ const App: React.FC = () => {
                 <div className="overflow-x-auto border rounded-[2rem]">
                   <table className="w-full text-left border-collapse bg-white">
                     <thead>
-                      <tr className="border-b-2 border-slate-100">
-                        <th className="py-4 px-6 text-xs font-black text-slate-400 uppercase tracking-widest">Risk Area</th>
-                        <th className="py-4 px-6 text-xs font-black text-slate-400 uppercase tracking-widest">Security Impact</th>
+                      <tr className="border-b-2 border-slate-100 bg-slate-50/50">
+                        <th className="py-4 px-6 text-xs font-black text-slate-400 uppercase tracking-widest">Risk Category</th>
+                        <th className="py-4 px-6 text-xs font-black text-slate-400 uppercase tracking-widest">Security Impact & User Scenario</th>
                         <th className="py-4 px-6 text-xs font-black text-slate-400 uppercase tracking-widest text-right">Severity</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100">
                       {result.riskTable?.map((row, idx) => (
-                        <tr key={idx}>
-                          <td className="py-5 px-6 font-black text-slate-900">{row.category}</td>
-                          <td className="py-5 px-6 text-sm font-medium text-slate-600 leading-relaxed">{row.description}</td>
-                          <td className="py-5 px-6 text-right whitespace-nowrap">
+                        <tr key={idx} className="align-top hover:bg-slate-50/30 transition-colors">
+                          <td className="py-6 px-6 font-black text-slate-900 whitespace-nowrap">{row.category}</td>
+                          <td className="py-6 px-6 space-y-3 max-w-xl">
+                            <div className="text-sm font-medium text-slate-700 leading-relaxed">
+                              {row.description}
+                            </div>
+                            {row.scenario && (
+                              <div className="bg-indigo-50/50 border border-indigo-100 p-4 rounded-xl flex gap-3 items-start group">
+                                <Lightbulb className="w-4 h-4 text-indigo-500 flex-shrink-0 mt-0.5 group-hover:animate-pulse" />
+                                <div className="text-xs font-bold text-indigo-800 italic leading-relaxed">
+                                  <span className="uppercase text-[9px] font-black not-italic block mb-1 opacity-60">Relatable Scenario:</span>
+                                  {row.scenario}
+                                </div>
+                              </div>
+                            )}
+                          </td>
+                          <td className="py-6 px-6 text-right whitespace-nowrap">
                             <SeverityBadge severity={row.severity} />
                           </td>
                         </tr>
