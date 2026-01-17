@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { AppState, AnalysisRequest, AnalysisResult, RiskPoint, RiskTableRow } from './types';
+import { AppState, AnalysisRequest, AnalysisResult, RiskTableRow } from './types';
 import { analyzeTool } from './services/geminiService';
 import { Shield, Search, Info, AlertTriangle, CheckCircle, ExternalLink, ArrowLeft, Zap, XCircle, AlertCircle, FileText, Globe, Link as LinkIcon, Cpu, Download, Calendar, Flame, Lightbulb } from 'lucide-react';
 
@@ -247,38 +247,6 @@ const App: React.FC = () => {
                     <h2 className="text-5xl font-black leading-none tracking-tighter">{getVerdictTheme(result.recommendation).label}</h2>
                     <p className="text-xl font-medium opacity-90 max-w-2xl">{result.summary}</p>
                   </div>
-                </div>
-              </div>
-
-              {/* TOP TRADE-OFFS */}
-              <div className="p-2 space-y-8">
-                <div className="flex items-center gap-4">
-                  <div className="p-3 bg-red-50 rounded-2xl border border-red-100">
-                    <AlertTriangle className="w-8 h-8 text-red-500" />
-                  </div>
-                  <h3 className="text-3xl font-black tracking-tight">Critical Data Trade-offs</h3>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {result.topRisks?.map((risk, idx) => (
-                    <div key={idx} className="flex gap-4 p-6 bg-slate-50 rounded-[2rem] border border-slate-100">
-                      <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center border shadow-sm flex-shrink-0">
-                        <span className="text-slate-900 font-black text-lg">{idx + 1}</span>
-                      </div>
-                      <div className="flex-1 space-y-3">
-                        <p className="text-lg font-bold text-slate-700 leading-snug">{risk.point}</p>
-                        {risk.sourceUrl && (
-                          <a 
-                            href={risk.sourceUrl} 
-                            target="_blank" 
-                            rel="noopener noreferrer" 
-                            className="inline-block text-[11px] font-black text-indigo-600 uppercase tracking-widest underline underline-offset-4 decoration-indigo-300 hover:decoration-indigo-600"
-                          >
-                            Read More
-                          </a>
-                        )}
-                      </div>
-                    </div>
-                  ))}
                 </div>
               </div>
 

@@ -5,12 +5,6 @@ export interface AnalysisRequest {
   useCase?: string;
 }
 
-export interface RiskPoint {
-  point: string;
-  sourceUrl?: string;
-  priority: number;
-}
-
 export interface RiskTableRow {
   category: string;
   description: string;
@@ -30,7 +24,6 @@ export interface AnalysisResult {
   overallRiskScore: number;
   summary: string;
   creativeWarning: string;
-  topRisks: RiskPoint[];
   riskTable: RiskTableRow[];
   recommendation: 'Approved' | 'Conditional' | 'Restricted';
   sources: GroundingSource[];

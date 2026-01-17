@@ -12,12 +12,11 @@ export const analyzeTool = async (request: AnalysisRequest): Promise<AnalysisRes
 
     STRICT ANALYSIS REQUIREMENTS:
     1. TOOL DESCRIPTION: Provide a very brief (1-sentence) description.
-    2. TOP TRADE-OFFS: Identify 5-6 critical risks.
-    3. FULL RISK PROFILE: Comprehensive list (10+ entries).
-    4. USER IMPACT: For EVERY entry in the risk table, provide a "scenario"—a relatable, real-world example of what could happen to a regular employee using it (e.g., "Imagine if a competitor finds your internal project timeline via a search engine").
-    5. CREATIVE WARNING: Write a punchy, creative, slightly satirical "Truth Bomb" (max 20 words).
-    6. SOURCES: Direct URLs to official Privacy Policy, Terms of Service, etc.
-    7. FRESHNESS: Identify "Last Updated" dates.
+    2. FULL RISK PROFILE: Comprehensive list (10+ entries).
+    3. USER IMPACT: For EVERY entry in the risk table, provide a "scenario"—a relatable, real-world example of what could happen to a regular employee using it (e.g., "Imagine if a competitor finds your internal project timeline via a search engine").
+    4. CREATIVE WARNING: Write a punchy, creative, slightly satirical "Truth Bomb" (max 20 words).
+    5. SOURCES: Direct URLs to official Privacy Policy, Terms of Service, etc.
+    6. FRESHNESS: Identify "Last Updated" dates.
 
     Return a JSON response:
     {
@@ -26,9 +25,6 @@ export const analyzeTool = async (request: AnalysisRequest): Promise<AnalysisRes
       "overallRiskScore": 0-100,
       "summary": "1-sentence decision summary",
       "creativeWarning": "Punchy reality check",
-      "topRisks": [
-        { "point": "Simple risk description", "sourceUrl": "Direct link", "priority": 1 }
-      ],
       "riskTable": [
         { 
           "category": "Category Name", 
