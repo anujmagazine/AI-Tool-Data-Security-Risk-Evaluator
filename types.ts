@@ -25,6 +25,7 @@ export interface AnalysisResult {
   summary: string;
   creativeWarning: string;
   riskTable: RiskTableRow[];
+  safeUseCases: string[];
   recommendation: 'Approved' | 'Conditional' | 'Restricted';
   sources: GroundingSource[];
 }

@@ -6,17 +6,18 @@ export const analyzeTool = async (request: AnalysisRequest): Promise<AnalysisRes
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
   
   const prompt = `
-    Act as a Corporate Data Safety Officer with a sense of humor. Analyze the FREE version of the AI tool: "${request.toolName}"
+    Act as a Corporate Data Safety Officer. Analyze the FREE version of the AI tool: "${request.toolName}"
     ${request.website ? `Official Website: ${request.website}` : ''}
     ${request.useCase ? `Context/Use Case: ${request.useCase}` : ''}
 
     STRICT ANALYSIS REQUIREMENTS:
     1. TOOL DESCRIPTION: Provide a very brief (1-sentence) description.
     2. FULL RISK PROFILE: Comprehensive list (10+ entries).
-    3. USER IMPACT: For EVERY entry in the risk table, provide a "scenario"—a relatable, real-world example of what could happen to a regular employee using it (e.g., "Imagine if a competitor finds your internal project timeline via a search engine").
-    4. CREATIVE WARNING: Write a punchy, creative, slightly satirical "Truth Bomb" (max 20 words).
-    5. SOURCES: Direct URLs to official Privacy Policy, Terms of Service, etc.
-    6. FRESHNESS: Identify "Last Updated" dates.
+    3. USER IMPACT: For EVERY entry in the risk table, provide a "scenario"—a relatable, real-world example of what could happen to a regular employee using it.
+    4. SAFE USE CASES: Identify 3-5 specific tasks where this free version can be SAFELY used by employees without risking sensitive corporate data (e.g., "Learning generic coding syntax", "Drafting public-facing social media posts").
+    5. CREATIVE WARNING: Write a punchy, creative, slightly satirical "Truth Bomb" (max 20 words) explaining the data trade-off.
+    6. SOURCES: Direct URLs to official Privacy Policy, Terms of Service, etc.
+    7. FRESHNESS: Identify "Last Updated" dates.
 
     Return a JSON response:
     {
@@ -25,6 +26,7 @@ export const analyzeTool = async (request: AnalysisRequest): Promise<AnalysisRes
       "overallRiskScore": 0-100,
       "summary": "1-sentence decision summary",
       "creativeWarning": "Punchy reality check",
+      "safeUseCases": ["Use case 1", "Use case 2"],
       "riskTable": [
         { 
           "category": "Category Name", 

@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { AppState, AnalysisRequest, AnalysisResult, RiskTableRow } from './types';
 import { analyzeTool } from './services/geminiService';
-import { Shield, Search, Info, AlertTriangle, CheckCircle, ExternalLink, ArrowLeft, Zap, XCircle, AlertCircle, FileText, Globe, Link as LinkIcon, Cpu, Download, Calendar, Flame, Lightbulb } from 'lucide-react';
+import { Shield, Search, Info, AlertTriangle, CheckCircle, ExternalLink, ArrowLeft, Zap, XCircle, AlertCircle, FileText, Globe, Link as LinkIcon, Cpu, Download, Calendar, Flame, Lightbulb, CheckCircle2 } from 'lucide-react';
 
 const App: React.FC = () => {
   const [state, setState] = useState<AppState>(AppState.IDLE);
@@ -295,6 +295,34 @@ const App: React.FC = () => {
                   </table>
                 </div>
               </div>
+
+              {/* SAFE USE CASES SECTION */}
+              {result.safeUseCases && result.safeUseCases.length > 0 && (
+                <div className="p-2 space-y-8">
+                  <div className="flex items-center gap-4">
+                    <div className="p-3 bg-emerald-50 rounded-2xl border border-emerald-100">
+                      <CheckCircle2 className="w-8 h-8 text-emerald-600" />
+                    </div>
+                    <h3 className="text-3xl font-black tracking-tight">Permitted Safe Use Cases</h3>
+                  </div>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {result.safeUseCases.map((useCase, idx) => (
+                      <div key={idx} className="flex items-center gap-4 p-5 bg-emerald-50/30 border border-emerald-100 rounded-2xl">
+                        <div className="bg-emerald-500 rounded-full p-1.5 flex-shrink-0 shadow-sm">
+                           <CheckCircle2 className="w-4 h-4 text-white" />
+                        </div>
+                        <span className="font-bold text-emerald-900 leading-tight">{useCase}</span>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="p-5 bg-slate-50 border border-dashed border-slate-300 rounded-2xl">
+                    <p className="text-xs text-slate-500 font-bold italic text-center">
+                      Reminder: Even for safe use cases, never paste PII (Personally Identifiable Information), passwords, or non-public financial data.
+                    </p>
+                  </div>
+                </div>
+              )}
 
               {/* SOURCES SECTION */}
               <div id="sources" className="p-2 space-y-8">
